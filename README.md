@@ -1,6 +1,6 @@
 # KRISCENT - Team Collaboration Platform
 
-A real-time team collaboration platform with AI-powered task management, Kanban boards, and team chat.
+A real-time team collaboration platform with Assistant-powered task management, Kanban boards, and team chat.
 
 ---
 
