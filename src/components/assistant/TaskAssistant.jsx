@@ -177,7 +177,6 @@ Just tell me what you want to do! 🚀`,
             },
           ]);
         } else if (command.action === "assign") {
-          // Check newly created tasks first (for chained create + assign)
           const justCreated = newlyCreatedTasks.find((t) =>
             t.title.toLowerCase().includes(command.taskTitle?.toLowerCase()),
           );
