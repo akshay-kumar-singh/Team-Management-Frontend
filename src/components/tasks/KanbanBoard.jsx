@@ -5,26 +5,28 @@ import { Column } from "./Column";
 import { TaskModal } from "./TaskModal";
 import { Button } from "../common/Button";
 import { TASK_COLUMNS } from "../../utils/constants";
-import { useTasks } from "../../hooks/useTasks";
 import { useSearchParams } from "react-router-dom";
 
-export const KanbanBoard = () => {
+export const KanbanBoard = ({ tasks = [], createTask, updateTask, deleteTask }) => {
   const [searchParams] = useSearchParams();
   const projectId = searchParams.get("projectId");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
-  const { tasks, createTask, updateTask, deleteTask } = useTasks(projectId);
 
-  const handleDragEnd = async (result) => {
-    if (!result.destination) return;
+const handleDragEnd = async (result) => {
+  if (!result.destination) return;
 
-    const { draggableId, destination } = result;
-    const task = tasks.find((t) => t._id === draggableId);
+  const { draggableId, destination } = result;
+  const task = tasks.find((t) => t._id === draggableId);
 
-    if (task && task.status !== destination.droppableId) {
-      await updateTask(draggableId, { status: destination.droppableId });
-    }
-  };
+  if (task && task.status !== destination.droppableId) {
+    // Always include existing assignedTo so it never gets wiped
+    await updateTask(draggableId, {
+      status: destination.droppableId,
+      assignedTo: task.assignedTo?._id || task.assignedTo || null,
+    });
+  }
+};
 
   const handleSubmit = async (data) => {
     if (selectedTask) {

@@ -21,7 +21,7 @@ export const useTasks = (projectId) => {
   const createTask = async (taskData) => {
     try {
       const { data } = await api.post("/api/tasks", { ...taskData, projectId });
-      setTasks([...tasks, data]);
+      setTasks((prev) => [...prev, data]);
       toast.success("Task created successfully");
       return data;
     } catch (error) {
@@ -33,7 +33,7 @@ export const useTasks = (projectId) => {
   const updateTask = async (id, taskData) => {
     try {
       const { data } = await api.put(`/api/tasks/${id}`, taskData);
-      setTasks(tasks.map((t) => (t._id === id ? data : t)));
+      setTasks((prev) => prev.map((t) => (t._id === id ? data : t)));
       toast.success("Task updated successfully");
       return data;
     } catch (error) {
@@ -45,7 +45,7 @@ export const useTasks = (projectId) => {
   const deleteTask = async (id) => {
     try {
       await api.delete(`/api/tasks/${id}`);
-      setTasks(tasks.filter((t) => t._id !== id));
+      setTasks((prev) => prev.filter((t) => t._id !== id));
       toast.success("Task deleted successfully");
     } catch (error) {
       toast.error(error.message);
