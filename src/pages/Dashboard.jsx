@@ -20,18 +20,40 @@ export const Dashboard = () => {
     fetchStats();
   }, []);
 
+  // In src/pages/Dashboard.jsx
+  // Replace fetchStats with this:
+
   const fetchStats = async () => {
     try {
-      const [projects, tasks, members] = await Promise.all([
+      const [projectsRes, membersRes] = await Promise.all([
         api.get("/api/projects"),
-        api.get("/api/tasks"),
         api.get("/api/users/team"),
       ]);
 
+      const projects = projectsRes.data;
+
+      // Fetch tasks for all projects
+      let totalTasks = 0;
+      if (projects.length > 0) {
+        const taskRequests = projects.map((p) =>
+          api.get(`/api/tasks?projectId=${p._id}`),
+        );
+        const taskResponses = await Promise.allSettled(taskRequests);
+        taskResponses.forEach((res) => {
+          if (res.status === "fulfilled") {
+            // Only count tasks that are NOT done (active tasks)
+            const activeTasks = res.value.data.filter(
+              (t) => t.status !== "done",
+            );
+            totalTasks += activeTasks.length;
+          }
+        });
+      }
+
       setStats({
-        projects: projects.data.length,
-        tasks: tasks.data.length,
-        members: members.data.length,
+        projects: projects.length,
+        tasks: totalTasks,
+        members: membersRes.data.length,
       });
     } catch (error) {
       console.error("Error fetching stats:", error);
@@ -48,7 +70,7 @@ export const Dashboard = () => {
     },
     {
       icon: CheckSquare,
-      label: "Active Tasks",
+      label: "Active Tasks", // (Todo + In Progress)
       value: stats.tasks,
       color: "from-green-500 to-emerald-500",
       bg: "bg-green-50",

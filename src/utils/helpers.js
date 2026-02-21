@@ -10,6 +10,11 @@ export const formatTime = (date) => {
   return format(new Date(date), "HH:mm");
 };
 
+export const formatDateTime = (date) => {
+  if (!date) return "";
+  return format(new Date(date), "MMM dd, yyyy • HH:mm");
+};
+
 export const getInitials = (name) => {
   if (!name) return "U";
   return name

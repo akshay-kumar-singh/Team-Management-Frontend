@@ -1,6 +1,6 @@
 import { Draggable } from "@hello-pangea/dnd";
 import { Edit, Trash2, User, Clock } from "lucide-react";
-import { truncateText } from "../../utils/helpers";
+import { truncateText, formatDateTime } from "../../utils/helpers";
 
 export const TaskCard = ({ task, index, onEdit, onDelete }) => {
   return (
@@ -35,7 +35,7 @@ export const TaskCard = ({ task, index, onEdit, onDelete }) => {
           <div className="flex items-center justify-between pt-3 border-t border-gray-100">
             <div className="flex items-center gap-1 text-xs text-gray-500">
               <Clock size={14} />
-              <span>2h ago</span>
+              <span>{formatDateTime(task.createdAt)}</span>
             </div>
             <div className="flex gap-2">
               <button

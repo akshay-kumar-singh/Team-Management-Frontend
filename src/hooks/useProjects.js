@@ -6,16 +6,36 @@ export const useProjects = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchProjects = async () => {
-    try {
-      const { data } = await api.get("/api/projects");
-      setProjects(data);
-    } catch (error) {
-      toast.error(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+ const fetchProjects = async () => {
+  try {
+    const { data } = await api.get("/api/projects");
+
+    // For each project, fetch tasks and compute status + progress
+    const projectsWithStatus = await Promise.all(
+      data.map(async (project) => {
+        try {
+          const taskRes = await api.get(`/api/tasks?projectId=${project._id}`);
+          const tasks = taskRes.data;
+          const total = tasks.length;
+          const doneTasks = tasks.filter((t) => t.status === "done").length;
+
+          let status = "Active";
+          if (total > 0 && doneTasks === total) status = "Completed";
+
+          return { ...project, total, doneTasks, status };
+        } catch {
+          return { ...project, total: 0, doneTasks: 0, status: "Active" };
+        }
+      })
+    );
+
+    setProjects(projectsWithStatus);
+  } catch (error) {
+    toast.error(error.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const createProject = async (projectData) => {
     try {

@@ -12,7 +12,7 @@ import { Tasks } from "./pages/Tasks";
 import { Chat } from "./pages/Chat";
 import { Team } from "./pages/Team";
 import { NotFound } from "./pages/NotFound";
-// testing
+
 function App() {
   return (
     <BrowserRouter>
