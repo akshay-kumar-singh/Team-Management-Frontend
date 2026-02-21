@@ -54,7 +54,7 @@ export const TaskAssistant = ({ onTaskAction }) => {
         </div>
         <div>
           <h3 className="font-bold text-gray-900 text-lg">AI Assistant</h3>
-          <p className="text-xs text-gray-600">Powered by KRISCENT</p>
+          <p className="text-xs text-gray-600">Powered by Workzen</p>
         </div>
       </div>
 

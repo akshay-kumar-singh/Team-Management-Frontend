@@ -55,7 +55,7 @@ export const Register = () => {
         <div className="relative bg-white/10 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/20">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">
-              KRISCENT
+              Workzen
             </h1>
             <p className="text-white/80 text-sm">Create Your Account</p>
           </div>

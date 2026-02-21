@@ -1,4 +1,4 @@
-# KRISCENT - Team Collaboration Platform
+# Workzen - Team Collaboration Platform
 
 A real-time team collaboration platform with Assistant-powered task management, Kanban boards, and team chat.
 
@@ -225,7 +225,7 @@ move Build login page to done
 ## Project Structure
 
 ```
-kriscent/
+Workzen/
 ├── backend/
 │   ├── config/
 │   │   ├── db.js                 # MongoDB connection
