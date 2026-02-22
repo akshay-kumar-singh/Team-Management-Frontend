@@ -14,7 +14,6 @@ export const TeamOverview = () => {
 
   const fetchMembers = async () => {
     try {
-      console.log("Fetching team members...");
       const { data } = await api.get("/api/users/team");
       console.log("Team members fetched:", data);
       setMembers(data);
