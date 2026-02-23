@@ -22,12 +22,11 @@ export const Register = () => {
     setLoading(true);
 
     try {
-      console.log("Registering user:", formData.email);
       await register(
         formData.email,
         formData.password,
         formData.name,
-        formData.role
+        formData.role,
       );
 
       toast.success("Registration successful!");
@@ -36,7 +35,6 @@ export const Register = () => {
         navigate("/dashboard");
       }, 1000);
     } catch (error) {
-      console.error("Registration error:", error);
       toast.error(error.message || "Registration failed");
     } finally {
       setLoading(false);

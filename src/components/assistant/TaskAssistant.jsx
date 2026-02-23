@@ -211,7 +211,6 @@ Just tell me what you want to do! 🚀`,
         }
       }
     } catch (error) {
-      console.error("Assistant error:", error);
       if (!actionSucceeded) {
         setMessages((prev) => [
           ...prev,
