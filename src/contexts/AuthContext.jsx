@@ -24,9 +24,7 @@ export const AuthProvider = ({ children }) => {
 
           const { data } = await api.get("/api/users/me");
           setUserData(data);
-          console.log("User data loaded:", data);
         } catch (error) {
-          console.error("Error fetching user data:", error);
           if (error.response?.status === 404) {
             console.log("User not found in database");
           }
