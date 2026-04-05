@@ -13,20 +13,20 @@ export const KanbanBoard = ({ tasks = [], createTask, updateTask, deleteTask }) 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
 
-const handleDragEnd = async (result) => {
-  if (!result.destination) return;
+  const handleDragEnd = async (result) => {
+    if (!result.destination) return;
 
-  const { draggableId, destination } = result;
-  const task = tasks.find((t) => t._id === draggableId);
+    const { draggableId, destination } = result;
+    const task = tasks.find((t) => t._id === draggableId);
 
-  if (task && task.status !== destination.droppableId) {
-    // Always include existing assignedTo so it never gets wiped
-    await updateTask(draggableId, {
-      status: destination.droppableId,
-      assignedTo: task.assignedTo?._id || task.assignedTo || null,
-    });
-  }
-};
+    if (task && task.status !== destination.droppableId) {
+      // Always include existing assignedTo so it never gets wiped
+      await updateTask(draggableId, {
+        status: destination.droppableId,
+        assignedTo: task.assignedTo?._id || task.assignedTo || null,
+      });
+    }
+  };
 
   const handleSubmit = async (data) => {
     if (selectedTask) {
@@ -66,7 +66,7 @@ const handleDragEnd = async (result) => {
       </div>
 
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {TASK_COLUMNS.map((column) => (
             <Column
               key={column.id}

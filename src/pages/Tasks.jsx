@@ -1,5 +1,6 @@
 import { KanbanBoard } from "../components/tasks/KanbanBoard";
 import { TaskAssistant } from "../components/assistant/TaskAssistant";
+import { AgentActivityPanel } from "../components/agent/AgentActivityPanel";
 import { useTasks } from "../hooks/useTasks";
 import { useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -103,8 +104,9 @@ export const Tasks = () => {
           deleteTask={deleteTask}
         />
       </div>
-      <div className="w-96">
+      <div className="w-96 flex flex-col gap-6">
         <TaskAssistant onTaskAction={handleTaskAction} tasks={tasks} />
+        <AgentActivityPanel />
       </div>
     </div>
   );

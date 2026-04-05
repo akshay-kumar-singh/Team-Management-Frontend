@@ -8,6 +8,7 @@ import {
   Clock,
 } from "lucide-react";
 import api from "../services/api";
+import { AgentActivityPanel } from "../components/agent/AgentActivityPanel";
 
 export const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -19,9 +20,6 @@ export const Dashboard = () => {
   useEffect(() => {
     fetchStats();
   }, []);
-
-  // In src/pages/Dashboard.jsx
-  // Replace fetchStats with this:
 
   const fetchStats = async () => {
     try {
@@ -119,8 +117,12 @@ export const Dashboard = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl shadow-lg p-6 border border-purple-200">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1">
+          <AgentActivityPanel />
+        </div>
+
+        <div className="lg:col-span-1 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl shadow-lg p-6 border border-purple-200">
           <div className="flex items-center gap-3 mb-4">
             <div className="bg-gradient-to-br from-purple-500 to-pink-500 p-2 rounded-lg">
               <Activity size={24} className="text-white" />
@@ -130,7 +132,7 @@ export const Dashboard = () => {
           <p className="text-gray-600">Activity feed coming soon...</p>
         </div>
 
-        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl shadow-lg p-6 border border-blue-200">
+        <div className="lg:col-span-1 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl shadow-lg p-6 border border-blue-200">
           <div className="flex items-center gap-3 mb-4">
             <div className="bg-gradient-to-br from-blue-500 to-cyan-500 p-2 rounded-lg">
               <Clock size={24} className="text-white" />
