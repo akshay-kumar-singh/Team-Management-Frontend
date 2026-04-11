@@ -45,6 +45,21 @@ export const useAgent = () => {
     }
   }, []);
 
+  // Delete an agent job
+  const deleteJob = useCallback(async (jobId) => {
+    try {
+      await api.delete(`/api/agent/jobs/${jobId}`);
+      setJobs((prev) => prev.filter((j) => j._id !== jobId));
+      if (activeJob && activeJob._id === jobId) {
+        setActiveJob(null);
+        setLogs([]);
+      }
+    } catch (error) {
+      console.error("Error deleting agent job:", error);
+      throw error;
+    }
+  }, [activeJob]);
+
   // Listen for Socket.IO agent events
   useEffect(() => {
     if (!socket) return;
@@ -84,6 +99,7 @@ export const useAgent = () => {
     fetchJobs,
     fetchJobStatus,
     triggerAgent,
+    deleteJob,
     setActiveJob,
     setLogs,
   };

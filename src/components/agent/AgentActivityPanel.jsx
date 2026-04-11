@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Bot, CheckCircle, XCircle, Loader, GitBranch, ExternalLink, Clock } from "lucide-react";
+import { Bot, CheckCircle, XCircle, Loader, GitBranch, ExternalLink, Clock, Trash2 } from "lucide-react";
 import { AGENT_STATUS_LABELS } from "../../utils/constants";
 import { useAgent } from "../../hooks/useAgent";
 
@@ -51,8 +51,19 @@ const StepIndicator = ({ currentStatus }) => {
 };
 
 export const AgentActivityPanel = () => {
-  const { jobs, fetchJobs, loading } = useAgent();
+  const { jobs, fetchJobs, deleteJob, loading } = useAgent();
   const [expandedJob, setExpandedJob] = useState(null);
+
+  const handleDelete = async (e, jobId) => {
+    e.stopPropagation();
+    if (window.confirm("Are you sure you want to delete this agent job?")) {
+      try {
+        await deleteJob(jobId);
+      } catch (error) {
+        alert("Failed to delete job");
+      }
+    }
+  };
 
   useEffect(() => {
     fetchJobs();
@@ -90,9 +101,16 @@ export const AgentActivityPanel = () => {
             >
               <div className="flex items-center gap-2 mb-2">
                 <Loader size={14} className="text-purple-500 animate-spin" />
-                <span className="text-sm font-semibold text-gray-900 truncate">
+                <span className="text-sm font-semibold text-gray-900 truncate flex-1">
                   {job.taskId?.title || "Unknown task"}
                 </span>
+                <button
+                  onClick={(e) => handleDelete(e, job._id)}
+                  className="text-gray-400 hover:text-red-500 transition-colors"
+                  title="Delete Job"
+                >
+                  <Trash2 size={13} />
+                </button>
               </div>
               <StepIndicator currentStatus={job.status} />
               {job.branch && (
@@ -128,17 +146,26 @@ export const AgentActivityPanel = () => {
                       {job.taskId?.title || "Unknown task"}
                     </span>
                   </div>
-                  {job.prUrl && (
-                    <a
-                      href={job.prUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-purple-500 hover:text-purple-700"
-                      onClick={(e) => e.stopPropagation()}
+                  <div className="flex items-center gap-2">
+                    {job.prUrl && (
+                      <a
+                        href={job.prUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-purple-500 hover:text-purple-700"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <ExternalLink size={12} />
+                      </a>
+                    )}
+                    <button
+                      onClick={(e) => handleDelete(e, job._id)}
+                      className="text-gray-400 hover:text-red-500 transition-colors"
+                      title="Delete Job"
                     >
-                      <ExternalLink size={12} />
-                    </a>
-                  )}
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Expanded logs */}
