@@ -6,9 +6,8 @@ import { useAgent } from "../../hooks/useAgent";
 const STEP_ORDER = ["queued", "cloning", "analyzing", "coding", "pushing", "creating-pr", "completed"];
 
 const StepIndicator = ({ currentStatus }) => {
-  const currentIdx = STEP_ORDER.indexOf(currentStatus);
+  const currentIdx = currentStatus === "revising" ? STEP_ORDER.indexOf("analyzing") : STEP_ORDER.indexOf(currentStatus);
   const isFailed = currentStatus === "failed";
-  const isRevising = currentStatus === "revising";
 
   return (
     <div className="flex items-center gap-1 overflow-x-auto pb-2">
