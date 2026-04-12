@@ -33,7 +33,7 @@ export const Tasks = () => {
           description: command.description || "",
           status: "todo",
         });
-        return newTask; // Return so assistant can use it for chained assign
+        return newTask;
       } else if (command.action === "move") {
         const taskToMove =
           tasks.find((t) => t._id === command.taskId) ||
@@ -42,7 +42,6 @@ export const Tasks = () => {
           );
 
         if (taskToMove) {
-          // Always include existing assignedTo so it never gets wiped
           await updateTask(taskToMove._id, {
             status: command.status,
             assignedTo:
@@ -52,8 +51,6 @@ export const Tasks = () => {
           toast.error("Task not found");
         }
       } else if (command.action === "assign") {
-        // If taskId is directly provided (e.g. from chained create+assign),
-        // use it directly — don't search tasks array which may not have new task yet
         const taskId =
           command.taskId ||
           tasks.find((t) =>
@@ -95,16 +92,17 @@ export const Tasks = () => {
   };
 
   return (
-    <div className="flex gap-6">
-      <div className="flex-1">
-        <KanbanBoard
-          tasks={tasks}
-          createTask={createTask}
-          updateTask={updateTask}
-          deleteTask={deleteTask}
-        />
-      </div>
-      <div className="w-96 flex flex-col gap-6">
+    <div className="space-y-6">
+      {/* Kanban Board - full width */}
+      <KanbanBoard
+        tasks={tasks}
+        createTask={createTask}
+        updateTask={updateTask}
+        deleteTask={deleteTask}
+      />
+
+      {/* AI Panels - side by side on large screens, stacked on mobile */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <TaskAssistant onTaskAction={handleTaskAction} tasks={tasks} />
         <AgentActivityPanel />
       </div>

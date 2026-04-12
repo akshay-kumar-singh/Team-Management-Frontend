@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Folder } from "lucide-react";
 import { ProjectCard } from "./ProjectCard";
 import { ProjectModal } from "./ProjectModal";
 import { Button } from "../common/Button";
@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 export const ProjectList = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
-  const { projects, loading, createProject, updateProject, deleteProject } =
+  const { projects, loading, createProject, updateProject, deleteProject, fetchProjects } =
     useProjects();
   const { userData } = useAuth();
   const navigate = useNavigate();
@@ -25,6 +25,8 @@ export const ProjectList = () => {
       await updateProject(selectedProject._id, data);
     } else {
       await createProject(data);
+      // Refetch to get proper task counts
+      await fetchProjects();
     }
     setSelectedProject(null);
   };
@@ -40,15 +42,24 @@ export const ProjectList = () => {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Projects</h1>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Projects</h1>
+          <p className="text-sm text-gray-500 mt-1">{projects.length} project{projects.length !== 1 ? "s" : ""}</p>
+        </div>
         {canCreate && (
           <Button onClick={() => setIsModalOpen(true)}>
-            <Plus size={20} className="mr-2" /> New Project
+            <Plus size={18} className="mr-1.5" /> New Project
           </Button>
         )}
       </div>
@@ -66,8 +77,19 @@ export const ProjectList = () => {
       </div>
 
       {projects.length === 0 && (
-        <div className="text-center text-gray-500 py-12">
-          No projects yet. Create your first project!
+        <div className="text-center py-16 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border border-purple-200">
+          <Folder size={48} className="mx-auto mb-4 text-purple-300" />
+          <p className="text-lg font-semibold text-gray-700">No projects yet</p>
+          <p className="text-sm text-gray-500 mt-1 mb-6">
+            {canCreate
+              ? "Create your first project to get started!"
+              : "No projects have been created yet."}
+          </p>
+          {canCreate && (
+            <Button onClick={() => setIsModalOpen(true)}>
+              <Plus size={18} className="mr-1.5" /> Create Project
+            </Button>
+          )}
         </div>
       )}
 

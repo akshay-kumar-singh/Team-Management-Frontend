@@ -31,7 +31,7 @@ Supported actions and their JSON format:
 {"action":"create","title":"task title here","description":"optional description here"}
 
 2. Move a task to a different status:
-{"action":"move","taskId":"the_task_id","taskTitle":"task title","status":"todo|in-progress|done"}
+{"action":"move","taskId":"the_task_id","taskTitle":"task title","status":"todo|in-progress|in-review|done"}
 
 3. Assign a task to someone:
 {"action":"assign","taskId":"the_task_id","taskTitle":"task title","user":"person name"}
@@ -44,7 +44,7 @@ Supported actions and their JSON format:
 
 Important rules:
 - Match task titles case-insensitively from the current task list
-- For move action, map words like "complete/finish/done" to "done", "start/progress/working" to "in-progress", "back/todo/reset" to "todo"
+- For move action, map words like "complete/finish/done" to "done", "start/progress/working" to "in-progress", "review/reviewing" to "in-review", "back/todo/reset" to "todo"
 - Always include taskId when you find a matching task
 - If user says something casual like "hi", use "unknown" action with a friendly reply
 - If the user wants to do MULTIPLE things in one message (e.g. create a task AND assign it), return a JSON array of commands like:
@@ -130,6 +130,7 @@ Just tell me what you want to do! 🚀`,
       const statusLabel = {
         todo: "To Do",
         "in-progress": "In Progress",
+        "in-review": "In Review",
         done: "Done",
       };
 
@@ -227,7 +228,7 @@ Just tell me what you want to do! 🚀`,
   };
 
   return (
-    <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl shadow-xl p-5 max-w-md border border-purple-200 sticky top-6">
+    <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl shadow-xl p-5 border border-purple-200">
       {/* Header */}
       <div className="flex items-center gap-3 mb-5">
         <div className="relative">
@@ -245,7 +246,7 @@ Just tell me what you want to do! 🚀`,
       </div>
 
       {/* Messages */}
-      <div className="h-[416px] overflow-y-auto mb-4 space-y-3 pr-2 scrollbar-thin scrollbar-thumb-purple-300 scrollbar-track-transparent">
+      <div className="h-64 sm:h-80 overflow-y-auto mb-4 space-y-3 pr-2 scrollbar-thin scrollbar-thumb-purple-300 scrollbar-track-transparent">
         {messages.map((msg, idx) => (
           <div
             key={idx}

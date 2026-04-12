@@ -40,7 +40,9 @@ export const useProjects = () => {
   const createProject = async (projectData) => {
     try {
       const { data } = await api.post("/api/projects", projectData);
-      setProjects([...projects, data]);
+      // New project has 0 tasks so we add default computed fields
+      const newProject = { ...data, total: 0, doneTasks: 0, status: "Active" };
+      setProjects([...projects, newProject]);
       toast.success("Project created successfully");
       return data;
     } catch (error) {
@@ -48,6 +50,7 @@ export const useProjects = () => {
       throw error;
     }
   };
+
 
   const updateProject = async (id, projectData) => {
     try {
