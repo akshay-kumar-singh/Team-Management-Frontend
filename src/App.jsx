@@ -4,6 +4,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { SocketProvider } from "./contexts/SocketContext";
 import { Login } from "./components/auth/Login";
 import { Register } from "./components/auth/Register";
+import { Join } from "./pages/Join";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { DashboardLayout } from "./components/dashboard/DashboardLayout";
 import { Dashboard } from "./pages/Dashboard";
@@ -22,6 +23,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/join" element={<Join />} />
 
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
 

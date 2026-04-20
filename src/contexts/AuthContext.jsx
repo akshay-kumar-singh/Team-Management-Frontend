@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }) => {
     return result;
   };
 
-  const register = async (email, password, name, role) => {
+  const register = async (email, password, name, organizationName) => {
     try {
       const result = await createUserWithEmailAndPassword(
         auth,
@@ -58,7 +58,7 @@ export const AuthProvider = ({ children }) => {
 
       const { data } = await api.post("/api/users", {
         name,
-        role,
+        organizationName,
         email,
       });
       console.log("User created in database:", data);
@@ -72,13 +72,33 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const registerFromInvite = async (email, password, name, token) => {
+    try {
+      const result = await createUserWithEmailAndPassword(auth, email, password);
+      // Ensure firebase provisions before hitting our DB
+      await result.user.getIdToken(); 
+
+      const { data } = await api.post("/api/users/accept-invite", {
+        name,
+        email,
+        token
+      });
+
+      setUserData(data);
+      return result;
+    } catch (error) {
+      console.error("Invite Registration error:", error);
+      throw error;
+    }
+  };
+
   const logout = async () => {
     await signOut(auth);
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, userData, loading, login, register, logout }}
+      value={{ user, userData, loading, login, register, registerFromInvite, logout }}
     >
       {children}
     </AuthContext.Provider>
