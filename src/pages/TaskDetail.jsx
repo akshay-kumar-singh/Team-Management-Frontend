@@ -12,6 +12,7 @@ import api from "../services/api";
 import toast from "react-hot-toast";
 import { Button } from "../components/common/Button";
 import { TaskModal } from "../components/tasks/TaskModal";
+import { TaskActivitySection } from "../components/tasks/TaskActivitySection";
 import {
   TypeIcon,
   PriorityIcon,
@@ -230,6 +231,13 @@ export const TaskDetail = () => {
               )}
             </div>
           )}
+
+          {/* Comments & history */}
+          <TaskActivitySection
+            taskId={task._id}
+            teamMembers={teamMembers}
+            refreshToken={task.updatedAt}
+          />
         </div>
 
         {/* Details sidebar */}

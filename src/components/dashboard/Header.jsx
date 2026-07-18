@@ -1,6 +1,7 @@
-import { LogOut, Bell, Menu, X } from "lucide-react";
+import { LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { Avatar } from "../common/TaskIcons";
+import { NotificationBell } from "../notifications/NotificationBell";
 
 export const Header = ({ onMenuClick, sidebarOpen }) => {
   const { userData, logout } = useAuth();
@@ -30,12 +31,7 @@ export const Header = ({ onMenuClick, sidebarOpen }) => {
 
       {/* Right: bell + avatar + logout */}
       <div className="flex items-center gap-1.5 sm:gap-2">
-        <button
-          className="p-2 hover:bg-gray-100 rounded transition-colors"
-          title="Notifications (coming soon)"
-        >
-          <Bell size={16} className="text-ink-subtle" />
-        </button>
+        <NotificationBell />
 
         <Avatar name={userData?.name} size="md" />
 
