@@ -1,12 +1,21 @@
 import { Draggable } from "@hello-pangea/dnd";
-import { Edit, Trash2, User, Clock, ExternalLink, Bot, Zap } from "lucide-react";
-import { truncateText, formatDateTime } from "../../utils/helpers";
-import { PRIORITY_COLORS, TYPE_ICONS, AGENT_STATUS_LABELS } from "../../utils/constants";
+import { useNavigate } from "react-router-dom";
+import { Edit, Trash2, ExternalLink, Bot, Zap } from "lucide-react";
+import {
+  TypeIcon,
+  PriorityIcon,
+  Avatar,
+  DueDateChip,
+} from "../common/TaskIcons";
+import { AGENT_STATUS_LABELS } from "../../utils/constants";
 
 export const TaskCard = ({ task, index, onEdit, onDelete }) => {
-  const priorityClass = PRIORITY_COLORS[task.priority] || PRIORITY_COLORS.medium;
-  const typeIcon = TYPE_ICONS[task.type] || TYPE_ICONS.task;
+  const navigate = useNavigate();
   const agentStatus = task.agentJobId?.status;
+
+  const openDetail = () => {
+    if (task.key) navigate(`/browse/${task.key}`);
+  };
 
   return (
     <Draggable draggableId={task._id} index={index}>
@@ -15,87 +24,82 @@ export const TaskCard = ({ task, index, onEdit, onDelete }) => {
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          className={`bg-white p-4 rounded-xl shadow-md mb-3 hover:shadow-lg transition-all duration-300 border border-gray-200 ${
-            snapshot.isDragging ? "rotate-3 scale-105" : ""
-          } ${task.assignedToAI ? "ring-2 ring-purple-300 ring-opacity-50" : ""}`}
+          onClick={openDetail}
+          className={`group bg-white p-3 rounded border border-line mb-2 shadow-sm hover:bg-gray-50 transition-colors duration-150 cursor-pointer ${
+            snapshot.isDragging ? "shadow-lg ring-2 ring-brand/40 rotate-1" : ""
+          }`}
         >
-          {/* Header: type icon + title + AI badge */}
-          <div className="flex items-start justify-between mb-2">
-            <div className="flex items-start gap-2 flex-1">
-              <span className="text-sm mt-0.5">{typeIcon}</span>
-              <h4 className="font-semibold text-gray-900 flex-1 text-sm leading-tight">{task.title}</h4>
-            </div>
-            {task.assignedToAI && (
-              <div className="flex items-center gap-1 bg-gradient-to-r from-purple-100 to-pink-100 px-2 py-0.5 rounded-full ml-2 flex-shrink-0">
-                <Bot size={12} className="text-purple-600" />
-                <span className="text-[10px] font-bold text-purple-600">AI</span>
-              </div>
-            )}
-          </div>
-
-          {/* Description */}
-          {task.description && (
-            <p className="text-xs text-gray-500 mb-2 leading-relaxed">
-              {truncateText(task.description, 80)}
-            </p>
-          )}
-
-          {/* Priority badge */}
-          <div className="flex items-center gap-2 mb-2 flex-wrap">
-            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${priorityClass}`}>
-              {task.priority?.toUpperCase() || "MEDIUM"}
-            </span>
-
-            {/* Agent status badge */}
-            {agentStatus && agentStatus !== "completed" && (
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 flex items-center gap-1">
-                <Zap size={10} />
-                {AGENT_STATUS_LABELS[agentStatus] || agentStatus}
-              </span>
-            )}
-          </div>
-
-          {/* PR Link */}
-          {task.prLink && (
-            <a
-              href={task.prLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-xs text-purple-600 hover:text-purple-800 mb-2 bg-purple-50 px-2 py-1 rounded-lg transition-colors"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <ExternalLink size={12} />
-              <span className="font-medium">View Pull Request</span>
-            </a>
-          )}
-
-          {/* Assigned To */}
-          {task.assignedTo && (
-            <div className="flex items-center gap-2 mb-2 text-xs text-gray-500">
-              <User size={12} />
-              <span>{task.assignedTo.name}</span>
-            </div>
-          )}
-
-          {/* Footer: date + actions */}
-          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-            <div className="flex items-center gap-1 text-[10px] text-gray-400">
-              <Clock size={11} />
-              <span>{formatDateTime(task.createdAt)}</span>
-            </div>
-            <div className="flex gap-1.5">
+          {/* Title + hover actions */}
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <h4 className="text-sm text-ink leading-snug flex-1 group-hover:text-brand">
+              {task.title}
+            </h4>
+            <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
               <button
-                onClick={() => onEdit(task)}
-                className="p-1.5 hover:bg-purple-100 rounded-lg transition-colors text-purple-600"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(task);
+                }}
+                title="Edit"
+                className="p-1 hover:bg-gray-200 rounded text-ink-subtle"
               >
-                <Edit size={13} />
+                <Edit size={12} />
               </button>
               <button
-                onClick={() => onDelete(task._id)}
-                className="p-1.5 hover:bg-red-100 rounded-lg transition-colors text-red-600"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(task._id);
+                }}
+                title="Delete"
+                className="p-1 hover:bg-danger-tint rounded text-ink-subtle hover:text-danger"
               >
-                <Trash2 size={13} />
+                <Trash2 size={12} />
               </button>
+            </div>
+          </div>
+
+          {/* Badges row: due date, AI, agent status, PR */}
+          {(task.dueDate || task.assignedToAI || (agentStatus && agentStatus !== "completed") || task.prLink) && (
+            <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+              <DueDateChip dueDate={task.dueDate} status={task.status} />
+              {task.assignedToAI && (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700">
+                  <Bot size={10} /> AI
+                </span>
+              )}
+              {agentStatus && agentStatus !== "completed" && (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-brand-tint text-brand">
+                  <Zap size={10} />
+                  {AGENT_STATUS_LABELS[agentStatus] || agentStatus}
+                </span>
+              )}
+              {task.prLink && (
+                <a
+                  href={task.prLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-ink-subtle hover:text-brand"
+                >
+                  <ExternalLink size={10} /> PR
+                </a>
+              )}
+            </div>
+          )}
+
+          {/* Footer: type + key ... priority + avatar */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <TypeIcon type={task.type} />
+              {task.key && (
+                <span className="text-[11px] font-medium text-ink-subtle truncate">
+                  {task.key}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <PriorityIcon priority={task.priority} />
+              {task.assignedTo && <Avatar name={task.assignedTo.name} size="xs" />}
             </div>
           </div>
         </div>

@@ -22,25 +22,25 @@ const StepIndicator = ({ currentStatus }) => {
               <div
                 className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
                   isDone
-                    ? "bg-green-500 text-white"
+                    ? "bg-success text-white"
                     : isActive && !isFailed
-                    ? "bg-purple-500 text-white animate-pulse"
+                    ? "bg-brand text-white animate-pulse"
                     : isActive && isFailed
-                    ? "bg-red-500 text-white"
+                    ? "bg-danger text-white"
                     : "bg-gray-200 text-gray-400"
                 }`}
               >
                 {isDone ? "✓" : idx + 1}
               </div>
               <span className={`text-[9px] mt-1 text-center leading-tight ${
-                isActive ? "text-purple-700 font-bold" : isDone ? "text-green-600" : "text-gray-400"
+                isActive ? "text-brand font-bold" : isDone ? "text-success" : "text-gray-400"
               }`}>
                 {label.replace(/^[^\s]+\s?/, "")}
               </span>
             </div>
             {idx < STEP_ORDER.length - 1 && (
               <div className={`w-4 h-0.5 mt-[-12px] ${
-                isDone ? "bg-green-400" : "bg-gray-200"
+                isDone ? "bg-success" : "bg-gray-200"
               }`} />
             )}
           </div>
@@ -59,7 +59,7 @@ export const AgentActivityPanel = () => {
     if (window.confirm("Are you sure you want to delete this agent job?")) {
       try {
         await deleteJob(jobId);
-      } catch (error) {
+      } catch {
         alert("Failed to delete job");
       }
     }
@@ -67,7 +67,8 @@ export const AgentActivityPanel = () => {
 
   useEffect(() => {
     fetchJobs();
-    const interval = setInterval(fetchJobs, 5000); // Poll every 5s for updates
+    // Silent background poll as a fallback — live updates arrive via socket
+    const interval = setInterval(() => fetchJobs({ silent: true }), 15000);
     return () => clearInterval(interval);
   }, [fetchJobs]);
 
@@ -75,15 +76,15 @@ export const AgentActivityPanel = () => {
   const recentJobs = jobs.filter((j) => ["completed", "failed"].includes(j.status)).slice(0, 5);
 
   return (
-    <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl shadow-xl p-5 border border-purple-200">
+    <div className="bg-white rounded-lg border border-line p-5">
       {/* Header */}
       <div className="flex items-center gap-3 mb-4">
-        <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
-          <Bot className="text-white" size={20} />
+        <div className="w-9 h-9 bg-brand-tint rounded flex items-center justify-center">
+          <Bot className="text-brand" size={18} />
         </div>
         <div>
-          <h3 className="font-bold text-gray-900">AI Agent Activity</h3>
-          <p className="text-xs text-gray-500">
+          <h3 className="font-semibold text-ink text-sm">AI Agent Activity</h3>
+          <p className="text-xs text-ink-subtle">
             {activeJobs.length > 0
               ? `${activeJobs.length} job(s) in progress`
               : "No active jobs"}
@@ -97,11 +98,11 @@ export const AgentActivityPanel = () => {
           {activeJobs.map((job) => (
             <div
               key={job._id}
-              className="bg-white rounded-xl p-3 border border-purple-200 shadow-sm"
+              className="bg-canvas rounded p-3 border border-line"
             >
               <div className="flex items-center gap-2 mb-2">
-                <Loader size={14} className="text-purple-500 animate-spin" />
-                <span className="text-sm font-semibold text-gray-900 truncate flex-1">
+                <Loader size={14} className="text-brand animate-spin" />
+                <span className="text-sm font-medium text-ink truncate flex-1">
                   {job.taskId?.title || "Unknown task"}
                 </span>
                 <button
@@ -114,7 +115,7 @@ export const AgentActivityPanel = () => {
               </div>
               <StepIndicator currentStatus={job.status} />
               {job.branch && (
-                <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+                <div className="flex items-center gap-1 text-xs text-ink-subtle mt-1">
                   <GitBranch size={11} />
                   <span className="truncate">{job.branch}</span>
                 </div>
@@ -127,22 +128,22 @@ export const AgentActivityPanel = () => {
       {/* Recent Jobs */}
       {recentJobs.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">Recent</h4>
+          <h4 className="text-[10px] font-bold text-ink-subtle uppercase tracking-wide mb-2">Recent</h4>
           <div className="space-y-2">
             {recentJobs.map((job) => (
               <div
                 key={job._id}
-                className="bg-white/70 rounded-lg p-2.5 border border-gray-200 cursor-pointer hover:bg-white transition-colors"
+                className="bg-white rounded p-2.5 border border-line cursor-pointer hover:bg-gray-50 transition-colors"
                 onClick={() => setExpandedJob(expandedJob === job._id ? null : job._id)}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     {job.status === "completed" ? (
-                      <CheckCircle size={14} className="text-green-500" />
+                      <CheckCircle size={14} className="text-success" />
                     ) : (
-                      <XCircle size={14} className="text-red-500" />
+                      <XCircle size={14} className="text-danger" />
                     )}
-                    <span className="text-xs font-medium text-gray-700 truncate max-w-[180px]">
+                    <span className="text-xs font-medium text-ink truncate max-w-[180px]">
                       {job.taskId?.title || "Unknown task"}
                     </span>
                   </div>
@@ -152,7 +153,7 @@ export const AgentActivityPanel = () => {
                         href={job.prUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-purple-500 hover:text-purple-700"
+                        className="text-brand hover:text-brand-hover"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <ExternalLink size={12} />
@@ -172,7 +173,7 @@ export const AgentActivityPanel = () => {
                 {expandedJob === job._id && job.logs && (
                   <div className="mt-2 max-h-32 overflow-y-auto">
                     {job.logs.slice(-8).map((log, idx) => (
-                      <div key={idx} className="text-[10px] text-gray-500 py-0.5 flex gap-1">
+                      <div key={idx} className="text-[10px] text-ink-subtle py-0.5 flex gap-1">
                         <Clock size={9} className="mt-0.5 flex-shrink-0" />
                         <span>{log.message}</span>
                       </div>
@@ -187,7 +188,7 @@ export const AgentActivityPanel = () => {
 
       {/* Empty state */}
       {jobs.length === 0 && !loading && (
-        <div className="text-center py-6 text-gray-400">
+        <div className="text-center py-6 text-ink-subtle">
           <Bot size={32} className="mx-auto mb-2 opacity-30" />
           <p className="text-xs">No agent jobs yet.</p>
           <p className="text-xs">Create a task with "Assign to AI" to get started!</p>

@@ -1,8 +1,7 @@
-import { createContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { initSocket, disconnectSocket } from "../services/socket";
 import { useAuth } from "../hooks/useAuth";
-
-export const SocketContext = createContext();
+import { SocketContext } from "./socket-context";
 
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
@@ -11,7 +10,7 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     if (user) {
       console.log("Initializing socket for user:", user.uid);
-      const newSocket = initSocket();
+      const newSocket = initSocket(() => user.getIdToken());
       setSocket(newSocket);
     } else {
       console.log("No user, disconnecting socket");

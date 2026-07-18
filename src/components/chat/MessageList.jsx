@@ -12,9 +12,9 @@ export const MessageList = ({ messages }) => {
   }, [messages]);
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-gray-50 to-white">
+    <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-canvas">
       {messages.length === 0 && (
-        <div className="text-center text-gray-500 py-12">
+        <div className="text-center text-ink-subtle py-12 text-sm">
           No messages yet. Start the conversation! 💬
         </div>
       )}
@@ -41,29 +41,27 @@ export const MessageList = ({ messages }) => {
               }`}
             >
               <div
-                className={`w-10 h-10 bg-gradient-to-br ${
-                  isOwnMessage
-                    ? "from-purple-500 to-pink-500"
-                    : "from-blue-500 to-cyan-500"
-                } rounded-xl flex items-center justify-center text-white text-sm font-semibold shadow-lg flex-shrink-0`}
+                className={`w-8 h-8 ${
+                  isOwnMessage ? "bg-brand" : "bg-ink-subtle"
+                } rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0`}
               >
                 {getInitials(message.senderId?.name || "U")}
               </div>
               <div className="flex-1">
                 <div
-                  className={`rounded-2xl p-4 shadow-md ${
+                  className={`rounded-lg px-3.5 py-2.5 ${
                     isOwnMessage
-                      ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white"
-                      : "bg-white text-gray-900 border border-gray-200"
+                      ? "bg-brand text-white"
+                      : "bg-white text-ink border border-line"
                   }`}
                 >
-                  <p className="text-sm font-semibold mb-1 opacity-90">
+                  <p className="text-xs font-semibold mb-0.5 opacity-80">
                     {message.senderId?.name || "Unknown"}
                   </p>
-                  <p className="leading-relaxed">{message.content}</p>
+                  <p className="text-sm leading-relaxed">{message.content}</p>
                 </div>
                 <p
-                  className={`text-xs text-gray-500 mt-2 ${
+                  className={`text-[11px] text-ink-subtle mt-1 ${
                     isOwnMessage ? "text-right" : "text-left"
                   }`}
                 >

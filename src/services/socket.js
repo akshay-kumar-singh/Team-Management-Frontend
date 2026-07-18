@@ -2,7 +2,7 @@ import { io } from "socket.io-client";
 
 let socket = null;
 
-export const initSocket = () => {
+export const initSocket = (getToken) => {
   if (socket) {
     console.log("Socket already initialized");
     return socket;
@@ -16,6 +16,13 @@ export const initSocket = () => {
     reconnectionDelay: 1000,
     reconnectionAttempts: 5,
     withCredentials: true,
+    // Called on every (re)connection attempt so a fresh Firebase ID token
+    // is sent in the handshake — the server rejects unauthenticated sockets
+    auth: (cb) => {
+      Promise.resolve(getToken ? getToken() : null)
+        .then((token) => cb({ token }))
+        .catch(() => cb({ token: null }));
+    },
   });
 
   socket.on("connect", () => {

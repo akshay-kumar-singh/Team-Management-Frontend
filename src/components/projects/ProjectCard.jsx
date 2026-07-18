@@ -1,9 +1,7 @@
-import { Edit, Trash2, Users, Calendar } from "lucide-react";
-import { truncateText } from "../../utils/helpers";
+import { Edit, Trash2, Calendar, CheckCircle2 } from "lucide-react";
 import { USER_ROLES } from "../../utils/constants";
 import { useAuth } from "../../hooks/useAuth";
 import { formatDate } from "../../utils/helpers";
-import { CheckCircle2 } from "lucide-react";
 
 export const ProjectCard = ({ project, onEdit, onDelete, onClick }) => {
   const { userData } = useAuth();
@@ -12,69 +10,80 @@ export const ProjectCard = ({ project, onEdit, onDelete, onClick }) => {
     userData?.role === USER_ROLES.MANAGER;
   const canDelete = userData?.role === USER_ROLES.ADMIN;
 
+  const progress =
+    project.total > 0
+      ? Math.round((project.doneTasks / project.total) * 100)
+      : 0;
+
   return (
-    <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300 border border-gray-200 hover:-translate-y-1 cursor-pointer group">
+    <div className="group bg-white rounded-lg border border-line p-5 hover:shadow-md transition-shadow duration-150 cursor-pointer">
       <div onClick={onClick} className="mb-4">
         <div className="flex items-start justify-between mb-3">
-          <div className="bg-gradient-to-br from-purple-500 to-pink-500 p-3 rounded-xl shadow-lg group-hover:scale-110 transition-transform">
-            <Users className="text-white" size={24} />
+          {/* Project avatar from key */}
+          <div className="w-10 h-10 bg-brand rounded flex items-center justify-center text-white font-bold text-sm">
+            {(project.key || project.name || "P").slice(0, 2).toUpperCase()}
           </div>
           <span
-            className={`px-3 py-1 text-xs font-semibold rounded-full flex items-center gap-1 ${
+            className={`px-2 py-0.5 text-[10px] font-bold tracking-wide rounded flex items-center gap-1 ${
               project.status === "Completed"
-                ? "bg-blue-100 text-blue-700"
-                : "bg-green-100 text-green-700"
+                ? "bg-brand-tint text-brand"
+                : "bg-success-tint text-success"
             }`}
           >
-            {project.status === "Completed" && <CheckCircle2 size={12} />}
-            {project.status || "Active"}
+            {project.status === "Completed" && <CheckCircle2 size={11} />}
+            {(project.status || "Active").toUpperCase()}
           </span>
         </div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-purple-600 transition-colors">
-          {project.name}
-        </h3>
-        {project.total > 0 && (
+
+        <div className="flex items-center gap-2 mb-1">
+          <h3 className="text-base font-semibold text-ink group-hover:text-brand transition-colors truncate">
+            {project.name}
+          </h3>
+          {project.key && (
+            <span className="text-[10px] font-bold text-ink-subtle bg-gray-100 border border-line px-1.5 py-0.5 rounded flex-shrink-0">
+              {project.key}
+            </span>
+          )}
+        </div>
+        {project.description && (
+          <p className="text-xs text-ink-subtle truncate">{project.description}</p>
+        )}
+
+        {project.total > 0 ? (
           <div className="mt-3">
-            <div className="flex justify-between text-xs text-gray-500 mb-1">
+            <div className="flex justify-between text-xs text-ink-subtle mb-1">
               <span>Progress</span>
               <span>
-                {project.doneTasks}/{project.total} tasks
+                {project.doneTasks}/{project.total} issues
               </span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-gray-200 rounded-full h-1.5">
               <div
-                className={`h-2 rounded-full transition-all duration-500 ${
-                  project.status === "Completed"
-                    ? "bg-gradient-to-r from-blue-500 to-cyan-500"
-                    : "bg-gradient-to-r from-purple-500 to-pink-500"
-                }`}
-                style={{
-                  width: `${Math.round((project.doneTasks / project.total) * 100)}%`,
-                }}
+                className="h-1.5 rounded-full bg-brand transition-all duration-500"
+                style={{ width: `${progress}%` }}
               />
             </div>
           </div>
-        )}
-        {project.total === 0 && (
-          <p className="text-xs text-gray-400 mt-2 italic">No tasks yet</p>
+        ) : (
+          <p className="text-xs text-ink-subtle mt-3 italic">No issues yet</p>
         )}
       </div>
 
-      <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-        <div className="flex items-center gap-2 text-gray-500 text-sm">
-          <Calendar size={16} />
+      <div className="flex items-center justify-between pt-3 border-t border-line">
+        <div className="flex items-center gap-1.5 text-ink-subtle text-xs">
+          <Calendar size={13} />
           <span>{formatDate(project.createdAt)}</span>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           {canEdit && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit(project);
               }}
-              className="p-2 hover:bg-purple-100 rounded-lg transition-colors text-purple-600"
+              className="p-1.5 hover:bg-gray-100 rounded text-ink-subtle transition-colors"
             >
-              <Edit size={18} />
+              <Edit size={14} />
             </button>
           )}
           {canDelete && (
@@ -83,9 +92,9 @@ export const ProjectCard = ({ project, onEdit, onDelete, onClick }) => {
                 e.stopPropagation();
                 onDelete(project._id);
               }}
-              className="p-2 hover:bg-red-100 rounded-lg transition-colors text-red-600"
+              className="p-1.5 hover:bg-danger-tint hover:text-danger rounded text-ink-subtle transition-colors"
             >
-              <Trash2 size={18} />
+              <Trash2 size={14} />
             </button>
           )}
         </div>

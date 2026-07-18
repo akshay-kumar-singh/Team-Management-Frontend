@@ -31,7 +31,7 @@ export const TeamOverview = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-line border-t-brand"></div>
       </div>
     );
   }
@@ -40,21 +40,21 @@ export const TeamOverview = () => {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-            <Users size={24} className="text-white" />
+          <div className="w-10 h-10 bg-brand-tint rounded flex items-center justify-center">
+            <Users size={20} className="text-brand" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Team Members</h1>
-            <p className="text-gray-600">{members.length} members in your workspace</p>
+            <h1 className="text-xl sm:text-2xl font-semibold text-ink">Team Members</h1>
+            <p className="text-xs text-ink-subtle">{members.length} members in your workspace</p>
           </div>
         </div>
 
         {userData?.role === "ADMIN" && (
           <button
             onClick={() => setIsInviteModalOpen(true)}
-            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl transition-colors font-medium shadow-sm"
+            className="flex items-center gap-1.5 bg-brand hover:bg-brand-hover text-white px-3 py-1.5 rounded transition-colors font-medium text-sm"
           >
-            <UserPlus size={20} />
+            <UserPlus size={16} />
             Invite Member
           </button>
         )}
@@ -67,9 +67,9 @@ export const TeamOverview = () => {
       </div>
 
       {members.length === 0 && (
-        <div className="text-center text-gray-500 py-12 bg-gray-50 rounded-2xl">
-          <Users size={48} className="mx-auto mb-4 text-gray-400" />
-          <p className="text-lg font-medium">No team members found</p>
+        <div className="text-center text-ink-subtle py-12 bg-white border border-line rounded-lg">
+          <Users size={40} className="mx-auto mb-4 text-ink-subtle opacity-40" />
+          <p className="text-base font-medium text-ink">No team members found</p>
           <p className="text-sm mt-2">Invite others to join your workspace!</p>
         </div>
       )}

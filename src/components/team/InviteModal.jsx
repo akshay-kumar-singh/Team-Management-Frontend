@@ -18,12 +18,18 @@ export const InviteModal = ({ isOpen, onClose }) => {
     setLoading(true);
 
     try {
-      await api.post("/api/users/invite", formData);
-      toast.success("Invitation dispatched successfully!");
+      const { data } = await api.post("/api/users/invite", formData);
+      if (data.emailSent === false) {
+        // Dev fallback: SMTP failed but the invite exists — link is in the backend terminal
+        toast(data.message, { icon: "⚠️", duration: 8000 });
+      } else {
+        toast.success("Invitation sent successfully!");
+      }
       onClose();
       setFormData({ email: "", role: USER_ROLES.MEMBER });
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to send invitation");
+      // api interceptor rejects with a plain Error carrying the server message
+      toast.error(error.message || "Failed to send invitation");
     } finally {
       setLoading(false);
     }
@@ -39,17 +45,16 @@ export const InviteModal = ({ isOpen, onClose }) => {
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           placeholder="colleague@company.com"
           required
-          variant="light"
         />
         
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs font-semibold text-ink-subtle mb-1.5">
             Workspace Role
           </label>
           <select
             value={formData.role}
             onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="w-full px-3 py-2 bg-white border border-line rounded text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand"
           >
             <option value={USER_ROLES.MEMBER}>Member (Standard Access)</option>
             <option value={USER_ROLES.MANAGER}>Manager (Can Edit Projects)</option>

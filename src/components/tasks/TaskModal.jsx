@@ -5,18 +5,29 @@ import { TASK_STATUS, TASK_PRIORITY, TASK_TYPE } from "../../utils/constants";
 import api from "../../services/api";
 import { Bot } from "lucide-react";
 
+const fieldClass =
+  "w-full px-3 py-2 bg-white border border-line rounded text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors";
+const labelClass = "block text-xs font-semibold text-ink-subtle mb-1.5";
+
+// yyyy-MM-dd for <input type="date"> from an ISO string
+const toDateInput = (d) => (d ? String(d).slice(0, 10) : "");
+
+const EMPTY_FORM = {
+  title: "",
+  description: "",
+  status: TASK_STATUS.TODO,
+  assignedTo: "",
+  priority: TASK_PRIORITY.MEDIUM,
+  type: TASK_TYPE.TASK,
+  acceptanceCriteria: "",
+  assignedToAI: false,
+  repoUrl: "",
+  startDate: "",
+  dueDate: "",
+};
+
 export const TaskModal = ({ isOpen, onClose, onSubmit, task }) => {
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    status: TASK_STATUS.TODO,
-    assignedTo: "",
-    priority: TASK_PRIORITY.MEDIUM,
-    type: TASK_TYPE.TASK,
-    acceptanceCriteria: "",
-    assignedToAI: false,
-    repoUrl: "",
-  });
+  const [formData, setFormData] = useState(EMPTY_FORM);
   const [teamMembers, setTeamMembers] = useState([]);
 
   useEffect(() => {
@@ -34,7 +45,10 @@ export const TaskModal = ({ isOpen, onClose, onSubmit, task }) => {
     }
   };
 
+  // Re-sync every time the modal opens so a previous session's
+  // typed-but-unsaved values never leak into a fresh form
   useEffect(() => {
+    if (!isOpen) return;
     if (task) {
       setFormData({
         title: task.title,
@@ -46,21 +60,13 @@ export const TaskModal = ({ isOpen, onClose, onSubmit, task }) => {
         acceptanceCriteria: task.acceptanceCriteria || "",
         assignedToAI: task.assignedToAI || false,
         repoUrl: task.repoUrl || "",
+        startDate: toDateInput(task.startDate),
+        dueDate: toDateInput(task.dueDate),
       });
     } else {
-      setFormData({
-        title: "",
-        description: "",
-        status: TASK_STATUS.TODO,
-        assignedTo: "",
-        priority: TASK_PRIORITY.MEDIUM,
-        type: TASK_TYPE.TASK,
-        acceptanceCriteria: "",
-        assignedToAI: false,
-        repoUrl: "",
-      });
+      setFormData(EMPTY_FORM);
     }
-  }, [task]);
+  }, [task, isOpen]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -72,90 +78,109 @@ export const TaskModal = ({ isOpen, onClose, onSubmit, task }) => {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={task ? "Edit Task" : "Create New Task"}
+      title={task ? `Edit ${task.key || "task"}` : "Create issue"}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Title */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">
-            Task Title
+          <label className={labelClass}>
+            Title <span className="text-danger">*</span>
           </label>
           <input
             value={formData.title}
             onChange={(e) =>
               setFormData({ ...formData, title: e.target.value })
             }
-            placeholder="Enter task title"
+            placeholder="What needs to be done?"
             required
-            className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent"
+            className={fieldClass}
           />
         </div>
 
         {/* Type & Priority row */}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
-              Type
-            </label>
+            <label className={labelClass}>Type</label>
             <select
               value={formData.type}
               onChange={(e) =>
                 setFormData({ ...formData, type: e.target.value })
               }
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white"
+              className={fieldClass}
             >
-              <option value="task">📋 Task</option>
-              <option value="bug">🐛 Bug</option>
-              <option value="feature">✨ Feature</option>
+              <option value="task">Task</option>
+              <option value="bug">Bug</option>
+              <option value="feature">Feature</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
-              Priority
-            </label>
+            <label className={labelClass}>Priority</label>
             <select
               value={formData.priority}
               onChange={(e) =>
                 setFormData({ ...formData, priority: e.target.value })
               }
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white"
+              className={fieldClass}
             >
-              <option value="low">🟢 Low</option>
-              <option value="medium">🔵 Medium</option>
-              <option value="high">🟠 High</option>
-              <option value="critical">🔴 Critical</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
             </select>
+          </div>
+        </div>
+
+        {/* Start & Due date row */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelClass}>Start date</label>
+            <input
+              type="date"
+              value={formData.startDate}
+              onChange={(e) =>
+                setFormData({ ...formData, startDate: e.target.value })
+              }
+              className={fieldClass}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Due date</label>
+            <input
+              type="date"
+              value={formData.dueDate}
+              min={formData.startDate || undefined}
+              onChange={(e) =>
+                setFormData({ ...formData, dueDate: e.target.value })
+              }
+              className={fieldClass}
+            />
           </div>
         </div>
 
         {/* Description */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">
-            Description
-          </label>
+          <label className={labelClass}>Description</label>
           <textarea
             value={formData.description}
             onChange={(e) =>
               setFormData({ ...formData, description: e.target.value })
             }
-            placeholder="Enter task description"
-            className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent resize-none"
+            placeholder="Add a description..."
+            className={`${fieldClass} resize-none`}
             rows="3"
           />
         </div>
 
         {/* Acceptance Criteria */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">
-            Acceptance Criteria
-          </label>
+          <label className={labelClass}>Acceptance criteria</label>
           <textarea
             value={formData.acceptanceCriteria}
             onChange={(e) =>
               setFormData({ ...formData, acceptanceCriteria: e.target.value })
             }
             placeholder="What needs to be true for this task to be considered done?"
-            className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent resize-none"
+            className={`${fieldClass} resize-none`}
             rows="2"
           />
         </div>
@@ -163,15 +188,13 @@ export const TaskModal = ({ isOpen, onClose, onSubmit, task }) => {
         {/* Status & Assign To row */}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
-              Status
-            </label>
+            <label className={labelClass}>Status</label>
             <select
               value={formData.status}
               onChange={(e) =>
                 setFormData({ ...formData, status: e.target.value })
               }
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white"
+              className={fieldClass}
             >
               <option value={TASK_STATUS.TODO}>To Do</option>
               <option value={TASK_STATUS.IN_PROGRESS}>In Progress</option>
@@ -180,16 +203,14 @@ export const TaskModal = ({ isOpen, onClose, onSubmit, task }) => {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
-              Assign To
-            </label>
+            <label className={labelClass}>Assignee</label>
             <select
               value={formData.assignedTo}
               onChange={(e) =>
                 setFormData({ ...formData, assignedTo: e.target.value })
               }
               disabled={formData.assignedToAI}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white disabled:opacity-50"
+              className={`${fieldClass} disabled:opacity-50`}
             >
               <option value="">Unassigned</option>
               {teamMembers.map((member) => (
@@ -202,15 +223,19 @@ export const TaskModal = ({ isOpen, onClose, onSubmit, task }) => {
         </div>
 
         {/* AI Agent Toggle */}
-        <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-4">
-           <div className="flex items-center justify-between">
+        <div className="bg-canvas border border-line rounded p-4">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-md">
-                <Bot className="text-white" size={20} />
+              <div className="w-9 h-9 bg-brand-tint rounded flex items-center justify-center">
+                <Bot className="text-brand" size={18} />
               </div>
               <div>
-                <h4 className="font-semibold text-gray-900 text-sm">Assign to AI Agent</h4>
-                <p className="text-xs text-gray-500">Let AI automatically code and create a PR</p>
+                <h4 className="font-semibold text-ink text-sm">
+                  Assign to AI Agent
+                </h4>
+                <p className="text-xs text-ink-subtle">
+                  Let AI automatically code and create a PR
+                </p>
               </div>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
@@ -226,16 +251,14 @@ export const TaskModal = ({ isOpen, onClose, onSubmit, task }) => {
                 }
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-500 peer-checked:to-pink-500"></div>
+              <div className="w-10 h-[22px] bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-[18px] after:w-[18px] after:transition-all peer-checked:bg-brand"></div>
             </label>
           </div>
 
           {/* Repo URL (shown when AI is toggled on) */}
           {formData.assignedToAI && (
             <div className="mt-3">
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                GitHub Repository URL
-              </label>
+              <label className={labelClass}>GitHub repository URL</label>
               <input
                 value={formData.repoUrl}
                 onChange={(e) =>
@@ -243,25 +266,18 @@ export const TaskModal = ({ isOpen, onClose, onSubmit, task }) => {
                 }
                 placeholder="e.g. https://github.com/username/repo"
                 required={formData.assignedToAI}
-                className="w-full px-4 py-2.5 border border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white"
+                className={fieldClass}
               />
             </div>
           )}
         </div>
 
         {/* Buttons */}
-        <div className="flex gap-3 pt-2">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={onClose}
-            className="flex-1"
-          >
+        <div className="flex justify-end gap-2 pt-2">
+          <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" className="flex-1">
-            {task ? "Update Task" : "Create Task"}
-          </Button>
+          <Button type="submit">{task ? "Save" : "Create"}</Button>
         </div>
       </form>
     </Modal>

@@ -1,25 +1,24 @@
 import { Link } from "react-router-dom";
 import { Button } from "../components/common/Button";
-import { Home, AlertTriangle } from "lucide-react";
+import { Home, SearchX } from "lucide-react";
 
 export const NotFound = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-4">
-      <div className="absolute inset-0 bg-black opacity-20" />
-      <div className="relative text-center text-white">
+    <div className="min-h-screen flex items-center justify-center bg-canvas p-4">
+      <div className="text-center">
         <div className="flex items-center justify-center mb-6">
-          <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30">
-            <AlertTriangle size={40} className="text-white" />
+          <div className="w-16 h-16 bg-brand-tint rounded-lg flex items-center justify-center">
+            <SearchX size={32} className="text-brand" />
           </div>
         </div>
-        <h1 className="text-8xl font-black mb-4 tracking-tight">404</h1>
-        <h2 className="text-2xl font-bold mb-3">Page Not Found</h2>
-        <p className="text-white/70 mb-8 max-w-sm mx-auto">
-          The page you&apos;re looking for doesn&apos;t exist or has been moved.
+        <h1 className="text-6xl font-black mb-3 text-ink tracking-tight">404</h1>
+        <h2 className="text-xl font-semibold mb-2 text-ink">Page not found</h2>
+        <p className="text-ink-subtle mb-8 max-w-sm mx-auto text-sm">
+          The page you're looking for doesn't exist or has been moved.
         </p>
         <Link to="/dashboard">
           <Button className="gap-2">
-            <Home size={18} />
+            <Home size={16} />
             Back to Dashboard
           </Button>
         </Link>

@@ -19,24 +19,22 @@ export const Modal = ({ isOpen, onClose, title, children }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/55"
         onClick={onClose}
       />
-      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg z-10 border border-gray-200 flex flex-col max-h-[90vh]">
+      <div className="relative bg-white rounded-lg shadow-2xl w-full max-w-lg z-10 border border-line flex flex-col max-h-[90vh] animate-scaleIn">
         {/* Header */}
-        <div className="flex justify-between items-center p-6 pb-4 border-b border-gray-100 flex-shrink-0">
-          <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            {title}
-          </h2>
+        <div className="flex justify-between items-center px-6 py-4 border-b border-line flex-shrink-0">
+          <h2 className="text-lg font-semibold text-ink">{title}</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 p-1.5 hover:bg-gray-100 rounded-xl transition-colors"
+            className="text-ink-subtle hover:text-ink p-1.5 hover:bg-gray-100 rounded transition-colors"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
         {/* Scrollable content */}
-        <div className="overflow-y-auto flex-1 p-6 pt-4">
+        <div className="overflow-y-auto flex-1 p-6">
           {children}
         </div>
       </div>

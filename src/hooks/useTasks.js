@@ -9,7 +9,11 @@ export const useTasks = (projectId) => {
   const { socket } = useSocket();
 
   const fetchTasks = async () => {
-    if (!projectId) return;
+    if (!projectId) {
+      setTasks([]);
+      setLoading(false);
+      return;
+    }
     try {
       const { data } = await api.get(`/api/tasks?projectId=${projectId}`);
       setTasks(data);

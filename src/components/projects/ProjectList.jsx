@@ -45,7 +45,7 @@ export const ProjectList = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent" />
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-line border-t-brand" />
       </div>
     );
   }
@@ -54,12 +54,12 @@ export const ProjectList = () => {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Projects</h1>
-          <p className="text-sm text-gray-500 mt-1">{projects.length} project{projects.length !== 1 ? "s" : ""}</p>
+          <h1 className="text-xl sm:text-2xl font-semibold text-ink">Projects</h1>
+          <p className="text-xs text-ink-subtle mt-0.5">{projects.length} project{projects.length !== 1 ? "s" : ""}</p>
         </div>
         {canCreate && (
           <Button onClick={() => setIsModalOpen(true)}>
-            <Plus size={18} className="mr-1.5" /> New Project
+            <Plus size={16} className="mr-1" /> Create project
           </Button>
         )}
       </div>
@@ -77,17 +77,17 @@ export const ProjectList = () => {
       </div>
 
       {projects.length === 0 && (
-        <div className="text-center py-16 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border border-purple-200">
-          <Folder size={48} className="mx-auto mb-4 text-purple-300" />
-          <p className="text-lg font-semibold text-gray-700">No projects yet</p>
-          <p className="text-sm text-gray-500 mt-1 mb-6">
+        <div className="text-center py-16 bg-white rounded-lg border border-line">
+          <Folder size={40} className="mx-auto mb-4 text-ink-subtle opacity-40" />
+          <p className="text-base font-semibold text-ink">No projects yet</p>
+          <p className="text-sm text-ink-subtle mt-1 mb-6">
             {canCreate
               ? "Create your first project to get started!"
               : "No projects have been created yet."}
           </p>
           {canCreate && (
             <Button onClick={() => setIsModalOpen(true)}>
-              <Plus size={18} className="mr-1.5" /> Create Project
+              <Plus size={16} className="mr-1" /> Create project
             </Button>
           )}
         </div>

@@ -8,4 +8,5 @@
   status = 200
 
 [build.environment]
-  NODE_VERSION = "18"
+  # Vite 7 requires Node 20.19+ — builds fail on Node 18
+  NODE_VERSION = "22"

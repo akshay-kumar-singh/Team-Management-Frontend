@@ -9,16 +9,17 @@ export const useAgent = () => {
   const [loading, setLoading] = useState(false);
   const { socket } = useSocket();
 
-  // Fetch all agent jobs
-  const fetchJobs = useCallback(async () => {
+  // Fetch all agent jobs. Background polls pass { silent: true } so the
+  // loading state doesn't flip and make the UI flicker every interval.
+  const fetchJobs = useCallback(async ({ silent = false } = {}) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const { data } = await api.get("/api/agent/jobs");
       setJobs(data);
     } catch (error) {
       console.error("Error fetching agent jobs:", error);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 

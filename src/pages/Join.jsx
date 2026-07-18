@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { Input } from "../components/common/Input";
 import { Button } from "../components/common/Button";
+import { Zap } from "lucide-react";
 import toast from "react-hot-toast";
 
 export const Join = () => {
@@ -13,7 +14,7 @@ export const Join = () => {
   const [email, setEmail] = useState("");
   const [token, setToken] = useState("");
   const [loading, setLoading] = useState(false);
-  
+
   const { registerFromInvite } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -38,12 +39,7 @@ export const Join = () => {
     setLoading(true);
 
     try {
-      await registerFromInvite(
-        email,
-        formData.password,
-        formData.name,
-        token
-      );
+      await registerFromInvite(email, formData.password, formData.name, token);
 
       toast.success("Welcome aboard!");
 
@@ -51,36 +47,32 @@ export const Join = () => {
         navigate("/dashboard");
       }, 1000);
     } catch (error) {
-      toast.error(error.message || "Failed to join workspace. Link may be expired.");
+      toast.error(
+        error.message || "Failed to join workspace. Link may be expired."
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-4">
-      <div className="absolute inset-0 bg-black opacity-20"></div>
-      <div className="absolute inset-0 backdrop-blur-3xl"></div>
-
-      <div className="relative w-full max-w-md">
-        <div className="absolute -top-20 -left-20 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-pulse"></div>
-        
-        <div className="relative bg-white/10 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/20">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">
-              Workzen
-            </h1>
-            <p className="text-white/80 text-sm">Join your workspace</p>
+    <div className="min-h-screen flex items-center justify-center bg-canvas p-4">
+      <div className="w-full max-w-sm">
+        {/* Logo */}
+        <div className="flex items-center justify-center gap-2.5 mb-8">
+          <div className="w-10 h-10 bg-brand rounded flex items-center justify-center">
+            <Zap size={22} className="text-white" fill="currentColor" />
           </div>
+          <h1 className="text-2xl font-bold text-ink tracking-tight">Workzen</h1>
+        </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              label="Email"
-              type="email"
-              value={email}
-              disabled
-              className="opacity-70 cursor-not-allowed"
-            />
+        <div className="bg-white rounded-lg border border-line shadow-sm p-8">
+          <p className="text-sm font-semibold text-ink text-center mb-6">
+            Join your workspace
+          </p>
+
+          <form onSubmit={handleSubmit} className="space-y-1">
+            <Input label="Email" type="email" value={email} disabled />
             <Input
               label="Full Name"
               value={formData.name}
@@ -91,7 +83,7 @@ export const Join = () => {
               required
             />
             <Input
-              label="Secure Password"
+              label="Password"
               type="password"
               value={formData.password}
               onChange={(e) =>
@@ -100,21 +92,18 @@ export const Join = () => {
               placeholder="Create a strong password"
               required
             />
-            <Button type="submit" disabled={loading} className="w-full">
+            <Button type="submit" disabled={loading} className="w-full !mt-4">
               {loading ? "Joining..." : "Accept Invitation"}
             </Button>
           </form>
-
-          <p className="mt-6 text-center text-sm text-white/80">
-            Wrong account?{" "}
-            <Link
-              to="/login"
-              className="text-white font-semibold hover:underline"
-            >
-              Sign In Instead
-            </Link>
-          </p>
         </div>
+
+        <p className="mt-6 text-center text-sm text-ink-subtle">
+          Wrong account?{" "}
+          <Link to="/login" className="text-brand font-medium hover:underline">
+            Sign in instead
+          </Link>
+        </p>
       </div>
     </div>
   );

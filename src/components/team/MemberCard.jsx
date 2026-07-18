@@ -2,48 +2,38 @@ import { getInitials } from "../../utils/helpers";
 import { Mail, Shield, UserCheck } from "lucide-react";
 
 export const MemberCard = ({ member }) => {
-  const roleColors = {
-    ADMIN: "from-red-500 to-orange-500",
-    MANAGER: "from-blue-500 to-cyan-500",
-    MEMBER: "from-green-500 to-emerald-500",
-  };
-
   const roleBgColors = {
-    ADMIN: "bg-red-50 text-red-700 border-red-200",
-    MANAGER: "bg-blue-50 text-blue-700 border-blue-200",
-    MEMBER: "bg-green-50 text-green-700 border-green-200",
+    ADMIN: "bg-danger-tint text-danger",
+    MANAGER: "bg-brand-tint text-brand",
+    MEMBER: "bg-success-tint text-success",
   };
 
   return (
-    <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300 border border-gray-200 hover:-translate-y-1 group">
+    <div className="bg-white rounded-lg border border-line p-5 hover:shadow-md transition-shadow duration-150">
       <div className="flex items-start gap-4">
-        <div
-          className={`w-16 h-16 bg-gradient-to-br ${
-            roleColors[member.role]
-          } rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:scale-110 transition-transform`}
-        >
+        <div className="w-12 h-12 bg-brand rounded-full flex items-center justify-center text-white font-bold text-base">
           {getInitials(member.name)}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-bold text-lg text-gray-900 mb-1 truncate">
+          <h3 className="font-semibold text-base text-ink mb-0.5 truncate">
             {member.name}
           </h3>
-          <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
-            <Mail size={14} />
+          <div className="flex items-center gap-1.5 text-xs text-ink-subtle mb-3">
+            <Mail size={12} />
             <span className="truncate">{member.email}</span>
           </div>
           <div className="flex items-center gap-2">
             <span
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold border ${
+              className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wide ${
                 roleBgColors[member.role]
-              } flex items-center gap-1.5`}
+              } flex items-center gap-1`}
             >
-              <Shield size={14} />
+              <Shield size={11} />
               {member.role}
             </span>
-            <span className="px-3 py-1.5 bg-green-100 text-green-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-green-200">
-              <UserCheck size={14} />
-              Active
+            <span className="px-2 py-0.5 bg-success-tint text-success rounded text-[10px] font-bold tracking-wide flex items-center gap-1">
+              <UserCheck size={11} />
+              ACTIVE
             </span>
           </div>
         </div>

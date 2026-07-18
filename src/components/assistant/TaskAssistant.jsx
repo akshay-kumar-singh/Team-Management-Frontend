@@ -1,90 +1,22 @@
 import { useState, useRef } from "react";
 import { Bot, Send, Loader } from "lucide-react";
+import api from "../../services/api";
 
-// ── Gemini API call ──
-const callGroq = async (userMessage, tasks) => {
-  const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+// The LLM call happens server-side (/api/agent/assistant) so the
+// Groq API key never ships in the browser bundle
+const callAssistant = async (userMessage, tasks) => {
+  const { data } = await api.post("/api/agent/assistant", {
+    message: userMessage,
+    tasks: tasks.map((t) => ({
+      _id: t._id,
+      title: t.title,
+      status: t.status,
+      assignedTo: t.assignedTo ? { name: t.assignedTo.name } : null,
+    })),
+  });
 
-  const taskList =
-    tasks.length > 0
-      ? tasks
-          .map(
-            (t) =>
-              `- ID: ${t._id} | Title: "${t.title}" | Status: ${t.status} | Assigned: ${
-                t.assignedTo?.name || "Unassigned"
-              }`,
-          )
-          .join("\n")
-      : "No tasks yet.";
-
-  const systemPrompt = `You are a task management assistant for a project management app called Workzen.
-Your job is to understand what the user wants to do and return a JSON command.
-
-Current tasks in the board:
-${taskList}
-
-You must respond ONLY with a valid JSON object — no explanation, no markdown, no extra text.
-
-Supported actions and their JSON format:
-
-1. Create a task (with optional description):
-{"action":"create","title":"task title here","description":"optional description here"}
-
-2. Move a task to a different status:
-{"action":"move","taskId":"the_task_id","taskTitle":"task title","status":"todo|in-progress|in-review|done"}
-
-3. Assign a task to someone:
-{"action":"assign","taskId":"the_task_id","taskTitle":"task title","user":"person name"}
-
-4. Delete a task:
-{"action":"delete","taskId":"the_task_id","taskTitle":"task title"}
-
-5. If you cannot understand or it's not a task command:
-{"action":"unknown","reply":"your helpful response here"}
-
-Important rules:
-- Match task titles case-insensitively from the current task list
-- For move action, map words like "complete/finish/done" to "done", "start/progress/working" to "in-progress", "review/reviewing" to "in-review", "back/todo/reset" to "todo"
-- Always include taskId when you find a matching task
-- If user says something casual like "hi", use "unknown" action with a friendly reply
-- If the user wants to do MULTIPLE things in one message (e.g. create a task AND assign it), return a JSON array of commands like:
-[{"action":"create","title":"fix login","description":"fix the login bug"},{"action":"assign","taskId":"xxx","taskTitle":"fix login","user":"John"}]
-- If only one action, return a single JSON object (not an array)`;
-
-  const response = await fetch(
-    "https://api.groq.com/openai/v1/chat/completions",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile", // Free model on Groq
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userMessage },
-        ],
-        temperature: 0.1,
-        max_tokens: 200,
-      }),
-    },
-  );
-
-  if (!response.ok) {
-    const err = await response.json();
-    throw new Error(err.error?.message || "Groq API error");
-  }
-
-  const data = await response.json();
-  const text = data.choices?.[0]?.message?.content?.trim();
-
-  if (!text) throw new Error("Empty response from Groq");
-
-  const cleaned = text.replace(/```json|```/g, "").trim();
-  const parsed = JSON.parse(cleaned);
-  // Always return array for uniform handling
-  return Array.isArray(parsed) ? parsed : [parsed];
+  if (!Array.isArray(data.commands)) throw new Error("Invalid assistant response");
+  return data.commands;
 };
 // ── Component ──
 export const TaskAssistant = ({ onTaskAction, tasks = [] }) => {
@@ -126,7 +58,7 @@ Just tell me what you want to do! 🚀`,
     let actionSucceeded = false;
 
     try {
-      const commands = await callGroq(userText, tasks);
+      const commands = await callAssistant(userText, tasks);
       const statusLabel = {
         todo: "To Do",
         "in-progress": "In Progress",
@@ -211,7 +143,7 @@ Just tell me what you want to do! 🚀`,
           ]);
         }
       }
-    } catch (error) {
+    } catch {
       if (!actionSucceeded) {
         setMessages((prev) => [
           ...prev,
@@ -228,25 +160,25 @@ Just tell me what you want to do! 🚀`,
   };
 
   return (
-    <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl shadow-xl p-5 border border-purple-200">
+    <div className="bg-white rounded-lg border border-line p-5">
       {/* Header */}
       <div className="flex items-center gap-3 mb-5">
         <div className="relative">
-          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
-            <Bot className="text-white" size={24} />
+          <div className="w-10 h-10 bg-brand-tint rounded flex items-center justify-center">
+            <Bot className="text-brand" size={20} />
           </div>
-          <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
+          <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-success rounded-full border-2 border-white" />
         </div>
         <div>
-          <h3 className="font-bold text-gray-900 text-lg">AI Assistant</h3>
-          <p className="text-xs text-gray-600">
+          <h3 className="font-semibold text-ink text-sm">AI Assistant</h3>
+          <p className="text-xs text-ink-subtle">
             {isLoading ? "⚙️ Thinking..." : "Powered by Workzen ✨"}
           </p>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="h-64 sm:h-80 overflow-y-auto mb-4 space-y-3 pr-2 scrollbar-thin scrollbar-thumb-purple-300 scrollbar-track-transparent">
+      <div className="h-64 sm:h-80 overflow-y-auto mb-4 space-y-3 pr-2 scrollbar-thin scrollbar-thumb-purple-300 scrollbar-track-transparent bg-canvas rounded p-3 border border-line">
         {messages.map((msg, idx) => (
           <div
             key={idx}
@@ -255,10 +187,10 @@ Just tell me what you want to do! 🚀`,
             }`}
           >
             <div
-              className={`p-3 rounded-2xl max-w-[85%] ${
+              className={`px-3.5 py-2.5 rounded-lg max-w-[85%] ${
                 msg.type === "bot"
-                  ? "bg-white text-gray-800 shadow-md border border-gray-200"
-                  : "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg"
+                  ? "bg-white text-ink border border-line"
+                  : "bg-brand text-white"
               }`}
             >
               <p className="text-sm whitespace-pre-line leading-relaxed">
@@ -271,9 +203,9 @@ Just tell me what you want to do! 🚀`,
         {/* Typing indicator */}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-white border border-gray-200 p-3 rounded-2xl shadow-md flex items-center gap-2">
-              <Loader size={14} className="animate-spin text-purple-500" />
-              <span className="text-sm text-gray-500">
+            <div className="bg-white border border-line px-3.5 py-2.5 rounded-lg flex items-center gap-2">
+              <Loader size={14} className="animate-spin text-brand" />
+              <span className="text-sm text-ink-subtle">
                 Workzen is Working...
               </span>
             </div>
@@ -290,17 +222,17 @@ Just tell me what you want to do! 🚀`,
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask me anything..."
           disabled={isLoading}
-          className="flex-1 min-w-0 px-4 py-3 bg-white border border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 placeholder-gray-400 disabled:opacity-60"
+          className="flex-1 min-w-0 px-3 py-2 bg-white border border-line rounded text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand placeholder-gray-400 disabled:opacity-60"
         />
         <button
           type="submit"
           disabled={!input.trim() || isLoading}
-          className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3 rounded-xl hover:from-purple-600 hover:to-pink-600 shadow-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex-shrink-0"
+          className="bg-brand text-white p-2.5 rounded hover:bg-brand-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
         >
           {isLoading ? (
-            <Loader size={20} className="animate-spin" />
+            <Loader size={16} className="animate-spin" />
           ) : (
-            <Send size={20} />
+            <Send size={16} />
           )}
         </button>
       </form>

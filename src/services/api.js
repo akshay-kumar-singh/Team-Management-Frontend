@@ -11,7 +11,9 @@ const api = axios.create({
 api.interceptors.request.use(async (config) => {
   const user = auth.currentUser;
   if (user) {
-    const token = await user.getIdToken(true);
+    // getIdToken() returns the cached token and only refreshes it when expired;
+    // forcing a refresh here would add a network round-trip to every request
+    const token = await user.getIdToken();
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;

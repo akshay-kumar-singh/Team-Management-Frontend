@@ -8,7 +8,10 @@ export const ProjectModal = ({ isOpen, onClose, onSubmit, project }) => {
     description: "",
   });
 
+  // Re-sync every time the modal opens so a previous session's
+  // typed-but-unsaved values never leak into a fresh form
   useEffect(() => {
+    if (!isOpen) return;
     if (project) {
       setFormData({
         name: project.name,
@@ -17,7 +20,7 @@ export const ProjectModal = ({ isOpen, onClose, onSubmit, project }) => {
     } else {
       setFormData({ name: "", description: "" });
     }
-  }, [project]);
+  }, [project, isOpen]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

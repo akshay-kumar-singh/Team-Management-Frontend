@@ -1,25 +1,29 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Folder,
   CheckSquare,
   Users,
   Activity,
-  TrendingUp,
   Clock,
   BarChart2,
 } from "lucide-react";
 import api from "../services/api";
 import { AgentActivityPanel } from "../components/agent/AgentActivityPanel";
+import { TypeIcon, DueDateChip } from "../components/common/TaskIcons";
 
 export const Dashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     projects: 0,
     tasks: 0,
     members: 0,
   });
+  const [deadlines, setDeadlines] = useState([]);
 
   useEffect(() => {
     fetchStats();
+    fetchDeadlines();
   }, []);
 
   const fetchStats = async () => {
@@ -57,118 +61,113 @@ export const Dashboard = () => {
     }
   };
 
+  const fetchDeadlines = async () => {
+    try {
+      const { data } = await api.get("/api/tasks/deadlines");
+      setDeadlines(data);
+    } catch (error) {
+      console.error("Error fetching deadlines:", error);
+    }
+  };
+
   const cards = [
-    {
-      icon: Folder,
-      label: "Total Projects",
-      value: stats.projects,
-      color: "from-blue-500 to-cyan-500",
-      bg: "from-blue-50 to-cyan-50",
-      border: "border-blue-200",
-      textColor: "text-blue-700",
-    },
-    {
-      icon: CheckSquare,
-      label: "Active Tasks",
-      value: stats.tasks,
-      color: "from-green-500 to-emerald-500",
-      bg: "from-green-50 to-emerald-50",
-      border: "border-green-200",
-      textColor: "text-green-700",
-    },
-    {
-      icon: Users,
-      label: "Team Members",
-      value: stats.members,
-      color: "from-purple-500 to-pink-500",
-      bg: "from-purple-50 to-pink-50",
-      border: "border-purple-200",
-      textColor: "text-purple-700",
-    },
+    { icon: Folder, label: "Total Projects", value: stats.projects },
+    { icon: CheckSquare, label: "Active Issues", value: stats.tasks },
+    { icon: Users, label: "Team Members", value: stats.members },
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
-          Dashboard Overview
+        <h1 className="text-xl sm:text-2xl font-semibold text-ink mb-0.5">
+          Dashboard
         </h1>
-        <p className="text-gray-500 text-sm sm:text-base">
-          Track your team&apos;s progress and productivity
+        <p className="text-ink-subtle text-sm">
+          Track your team's progress and productivity
         </p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {cards.map((card, idx) => (
           <div
             key={idx}
-            className={`bg-gradient-to-br ${card.bg} rounded-2xl shadow-lg p-6 border ${card.border} hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}
+            className="bg-white rounded-lg border border-line p-5 hover:shadow-sm transition-shadow"
           >
-            <div className="flex items-center justify-between mb-4">
-              <div
-                className={`bg-gradient-to-br ${card.color} p-3 rounded-xl shadow-lg`}
-              >
-                <card.icon className="text-white" size={22} />
+            <div className="flex items-center gap-3 mb-3">
+              <div className="bg-brand-tint p-2 rounded">
+                <card.icon className="text-brand" size={18} />
               </div>
-              <div className={`flex items-center gap-1 text-xs font-semibold ${card.textColor}`}>
-                <TrendingUp size={14} />
-                <span>Active</span>
-              </div>
+              <p className="text-ink-subtle text-sm font-medium">{card.label}</p>
             </div>
-            <div>
-              <p className="text-gray-600 text-sm font-medium mb-1">
-                {card.label}
-              </p>
-              <p className="text-4xl font-bold text-gray-900">{card.value}</p>
-            </div>
+            <p className="text-3xl font-bold text-ink">{card.value}</p>
           </div>
         ))}
       </div>
 
-      {/* Bottom Section — Agent Activity (wider) + Side Panels */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Agent Activity — takes 1 column */}
+      {/* Bottom Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Agent Activity */}
         <div className="lg:col-span-1">
           <AgentActivityPanel />
         </div>
 
-        {/* Recent Activity */}
-        <div className="lg:col-span-1 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl shadow-lg p-6 border border-purple-200">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="bg-gradient-to-br from-purple-500 to-pink-500 p-2.5 rounded-xl shadow-md">
-              <Activity size={20} className="text-white" />
+        {/* Upcoming Deadlines — real data */}
+        <div className="lg:col-span-1 bg-white rounded-lg border border-line p-5">
+          <div className="flex items-center gap-2.5 mb-4">
+            <div className="bg-brand-tint p-2 rounded">
+              <Clock size={16} className="text-brand" />
             </div>
-            <h2 className="text-lg font-bold text-gray-900">Recent Activity</h2>
+            <h2 className="text-sm font-semibold text-ink">Upcoming Deadlines</h2>
           </div>
-          <div className="space-y-3">
-            {[
-              { text: "No recent activity", sub: "Activity will appear here as tasks are updated." },
-            ].map((item, i) => (
-              <div key={i} className="text-center py-8 text-gray-400">
-                <BarChart2 size={36} className="mx-auto mb-3 opacity-30" />
-                <p className="text-sm font-medium">{item.text}</p>
-                <p className="text-xs mt-1">{item.sub}</p>
-              </div>
-            ))}
-          </div>
+
+          {deadlines.length === 0 ? (
+            <div className="text-center py-8 text-ink-subtle">
+              <Clock size={30} className="mx-auto mb-2 opacity-30" />
+              <p className="text-sm font-medium">No upcoming deadlines</p>
+              <p className="text-xs mt-1">
+                Set due dates on tasks and they'll appear here.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {deadlines.map((t) => (
+                <button
+                  key={t._id}
+                  onClick={() => t.key && navigate(`/browse/${t.key}`)}
+                  className="w-full flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50 text-left transition-colors"
+                >
+                  <TypeIcon type={t.type} />
+                  {t.key && (
+                    <span className="text-[11px] font-medium text-ink-subtle flex-shrink-0">
+                      {t.key}
+                    </span>
+                  )}
+                  <span className="text-sm text-ink truncate flex-1">
+                    {t.title}
+                  </span>
+                  <DueDateChip dueDate={t.dueDate} status={t.status} />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Upcoming Deadlines */}
-        <div className="lg:col-span-1 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl shadow-lg p-6 border border-blue-200">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="bg-gradient-to-br from-blue-500 to-cyan-500 p-2.5 rounded-xl shadow-md">
-              <Clock size={20} className="text-white" />
+        {/* Recent Activity — real feed lands in Phase 7 */}
+        <div className="lg:col-span-1 bg-white rounded-lg border border-line p-5">
+          <div className="flex items-center gap-2.5 mb-4">
+            <div className="bg-brand-tint p-2 rounded">
+              <Activity size={16} className="text-brand" />
             </div>
-            <h2 className="text-lg font-bold text-gray-900">
-              Upcoming Deadlines
-            </h2>
+            <h2 className="text-sm font-semibold text-ink">Recent Activity</h2>
           </div>
-          <div className="text-center py-8 text-gray-400">
-            <Clock size={36} className="mx-auto mb-3 opacity-30" />
-            <p className="text-sm font-medium">No upcoming deadlines</p>
-            <p className="text-xs mt-1">Deadlines from tasks will appear here.</p>
+          <div className="text-center py-8 text-ink-subtle">
+            <BarChart2 size={30} className="mx-auto mb-2 opacity-30" />
+            <p className="text-sm font-medium">No recent activity</p>
+            <p className="text-xs mt-1">
+              Activity will appear here as tasks are updated.
+            </p>
           </div>
         </div>
       </div>

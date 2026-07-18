@@ -49,11 +49,11 @@ export const KanbanBoard = ({ tasks = [], createTask, updateTask, deleteTask }) 
 
   if (!projectId) {
     return (
-      <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl shadow-lg p-12 border border-purple-200 text-center">
-        <LayoutGrid size={48} className="mx-auto mb-4 text-purple-300" />
-        <h3 className="text-lg font-semibold text-gray-700 mb-2">No Project Selected</h3>
-        <p className="text-gray-500 text-sm">
-          Go to <span className="font-medium text-purple-600">Projects</span> and click a project to view its tasks.
+      <div className="bg-white rounded-lg p-12 border border-line text-center">
+        <LayoutGrid size={40} className="mx-auto mb-4 text-ink-subtle opacity-40" />
+        <h3 className="text-base font-semibold text-ink mb-1">No project selected</h3>
+        <p className="text-ink-subtle text-sm">
+          Go to <span className="font-medium text-brand">Projects</span> and click a project to view its board.
         </p>
       </div>
     );
@@ -61,13 +61,13 @@ export const KanbanBoard = ({ tasks = [], createTask, updateTask, deleteTask }) 
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Task Board</h1>
-          <p className="text-sm text-gray-500 mt-1">{tasks.length} total tasks</p>
+          <h1 className="text-xl font-semibold text-ink">Board</h1>
+          <p className="text-xs text-ink-subtle mt-0.5">{tasks.length} issues</p>
         </div>
         <Button onClick={() => setIsModalOpen(true)}>
-          <Plus size={18} className="mr-1.5" /> New Task
+          <Plus size={16} className="mr-1" /> Create
         </Button>
       </div>
 

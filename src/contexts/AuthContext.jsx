@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -7,8 +7,7 @@ import {
 } from "firebase/auth";
 import { auth } from "../services/firebase";
 import api from "../services/api";
-
-export const AuthContext = createContext();
+import { AuthContext } from "./auth-context";
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -20,8 +19,6 @@ export const AuthProvider = ({ children }) => {
       if (firebaseUser) {
         setUser(firebaseUser);
         try {
-          await firebaseUser.getIdToken(true);
-
           const { data } = await api.get("/api/users/me");
           setUserData(data);
         } catch (error) {
@@ -53,8 +50,8 @@ export const AuthProvider = ({ children }) => {
       );
       console.log("Firebase user created:", result.user.uid);
 
-      const token = await result.user.getIdToken();
-      console.log("Token obtained");
+      // Ensure the ID token is provisioned before hitting our API
+      await result.user.getIdToken();
 
       const { data } = await api.post("/api/users", {
         name,
@@ -74,9 +71,20 @@ export const AuthProvider = ({ children }) => {
 
   const registerFromInvite = async (email, password, name, token) => {
     try {
-      const result = await createUserWithEmailAndPassword(auth, email, password);
+      let result;
+      try {
+        result = await createUserWithEmailAndPassword(auth, email, password);
+      } catch (error) {
+        // A previous join attempt may have already created the Firebase
+        // account — sign in with the given password and continue
+        if (error.code === "auth/email-already-in-use") {
+          result = await signInWithEmailAndPassword(auth, email, password);
+        } else {
+          throw error;
+        }
+      }
       // Ensure firebase provisions before hitting our DB
-      await result.user.getIdToken(); 
+      await result.user.getIdToken();
 
       const { data } = await api.post("/api/users/accept-invite", {
         name,

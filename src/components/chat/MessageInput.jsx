@@ -25,7 +25,7 @@ export const MessageInput = ({ onSend }) => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex gap-3 p-4 border-t border-gray-200 bg-white"
+      className="flex gap-2 p-4 border-t border-line bg-white"
     >
       <input
         type="text"
@@ -33,14 +33,14 @@ export const MessageInput = ({ onSend }) => {
         onChange={(e) => setMessage(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Type a message... (Enter to send)"
-        className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent text-sm placeholder-gray-400"
+        className="flex-1 px-3 py-2 border border-line rounded text-sm text-ink placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand"
       />
       <button
         type="submit"
         disabled={!message.trim()}
-        className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2.5 rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none transform hover:scale-105 active:scale-95 flex items-center gap-2 text-sm font-medium"
+        className="bg-brand text-white px-3.5 py-2 rounded hover:bg-brand-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 text-sm font-medium"
       >
-        <Send size={16} />
+        <Send size={14} />
         <span className="hidden sm:inline">Send</span>
       </button>
     </form>

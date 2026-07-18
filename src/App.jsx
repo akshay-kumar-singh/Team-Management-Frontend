@@ -12,6 +12,7 @@ import { Projects } from "./pages/Projects";
 import { Tasks } from "./pages/Tasks";
 import { Chat } from "./pages/Chat";
 import { Team } from "./pages/Team";
+import { TaskDetail } from "./pages/TaskDetail";
 import { NotFound } from "./pages/NotFound";
 
 function App() {
@@ -25,8 +26,6 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/join" element={<Join />} />
 
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-
             <Route
               path="/"
               element={
@@ -35,11 +34,13 @@ function App() {
                 </ProtectedRoute>
               }
             >
+              <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="projects" element={<Projects />} />
               <Route path="tasks" element={<Tasks />} />
               <Route path="chat" element={<Chat />} />
               <Route path="team" element={<Team />} />
+              <Route path="browse/:key" element={<TaskDetail />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />

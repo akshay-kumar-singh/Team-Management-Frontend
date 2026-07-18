@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { Input } from "../common/Input";
 import { Button } from "../common/Button";
+import { Zap } from "lucide-react";
 import toast from "react-hot-toast";
 
 export const Login = () => {
@@ -27,23 +28,22 @@ export const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-4">
-      <div className="absolute inset-0 bg-black opacity-20"></div>
-      <div className="absolute inset-0 backdrop-blur-3xl"></div>
-
-      <div className="relative w-full max-w-md">
-        <div className="absolute -top-20 -left-20 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-pulse"></div>
-        <div className="absolute -bottom-20 -right-20 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-pulse"></div>
-
-        <div className="relative bg-white/10 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/20">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">
-              Workzen
-            </h1>
-            <p className="text-white/80 text-sm">Team Management Platform</p>
+    <div className="min-h-screen flex items-center justify-center bg-canvas p-4">
+      <div className="w-full max-w-sm">
+        {/* Logo */}
+        <div className="flex items-center justify-center gap-2.5 mb-8">
+          <div className="w-10 h-10 bg-brand rounded flex items-center justify-center">
+            <Zap size={22} className="text-white" fill="currentColor" />
           </div>
+          <h1 className="text-2xl font-bold text-ink tracking-tight">Workzen</h1>
+        </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="bg-white rounded-lg border border-line shadow-sm p-8">
+          <p className="text-sm font-semibold text-ink text-center mb-6">
+            Log in to continue
+          </p>
+
+          <form onSubmit={handleSubmit} className="space-y-1">
             <Input
               label="Email"
               type="email"
@@ -60,21 +60,18 @@ export const Login = () => {
               placeholder="Enter your password"
               required
             />
-            <Button type="submit" disabled={loading} className="w-full">
+            <Button type="submit" disabled={loading} className="w-full !mt-4">
               {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
-
-          <p className="mt-6 text-center text-sm text-white/80">
-            Don't have an account?{" "}
-            <Link
-              to="/register"
-              className="text-white font-semibold hover:underline"
-            >
-              Create Account
-            </Link>
-          </p>
         </div>
+
+        <p className="mt-6 text-center text-sm text-ink-subtle">
+          Don't have an account?{" "}
+          <Link to="/register" className="text-brand font-medium hover:underline">
+            Create account
+          </Link>
+        </p>
       </div>
     </div>
   );
