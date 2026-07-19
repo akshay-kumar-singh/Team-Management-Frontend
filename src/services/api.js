@@ -24,7 +24,11 @@ api.interceptors.response.use(
   (error) => {
     const message = error.response?.data?.message || "Something went wrong";
     console.error("API Error:", message);
-    return Promise.reject(new Error(message));
+    const err = new Error(message);
+    // Machine-readable reason (ORG_SUSPENDED, PLAN_LIMIT_MEMBERS, ...) when the API sends one
+    err.code = error.response?.data?.code;
+    err.status = error.response?.status;
+    return Promise.reject(err);
   }
 );
 

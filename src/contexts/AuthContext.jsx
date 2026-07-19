@@ -36,6 +36,18 @@ export const AuthProvider = ({ children }) => {
     return unsubscribe;
   }, []);
 
+  // Re-fetch /me (populated with the org's status/plan) — used by the
+  // approval gate's "Check status" and after registration
+  const refreshUser = async () => {
+    try {
+      const { data } = await api.get("/api/users/me");
+      setUserData(data);
+      return data;
+    } catch {
+      return null;
+    }
+  };
+
   const login = async (email, password) => {
     const result = await signInWithEmailAndPassword(auth, email, password);
     return result;
@@ -60,7 +72,9 @@ export const AuthProvider = ({ children }) => {
       });
       console.log("User created in database:", data);
 
-      setUserData(data);
+      // The create response has an unpopulated teamId — fetch /me so the
+      // approval gate can read the org's status right away
+      await refreshUser();
 
       return result;
     } catch (error) {
@@ -86,13 +100,13 @@ export const AuthProvider = ({ children }) => {
       // Ensure firebase provisions before hitting our DB
       await result.user.getIdToken();
 
-      const { data } = await api.post("/api/users/accept-invite", {
+      await api.post("/api/users/accept-invite", {
         name,
         email,
         token
       });
 
-      setUserData(data);
+      await refreshUser();
       return result;
     } catch (error) {
       console.error("Invite Registration error:", error);
@@ -106,7 +120,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, userData, loading, login, register, registerFromInvite, logout }}
+      value={{ user, userData, loading, login, register, registerFromInvite, logout, refreshUser }}
     >
       {children}
     </AuthContext.Provider>

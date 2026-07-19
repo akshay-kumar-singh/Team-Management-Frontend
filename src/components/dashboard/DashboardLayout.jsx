@@ -2,10 +2,13 @@ import { Outlet, useLocation } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { useState, useEffect } from "react";
+import { useAuth } from "../../hooks/useAuth";
 
 export const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const { userData } = useAuth();
+  const suspended = userData?.teamId?.status === "suspended";
 
   // Close sidebar on route change (mobile nav click)
   useEffect(() => {
@@ -37,6 +40,12 @@ export const DashboardLayout = () => {
           onMenuClick={() => setSidebarOpen(!sidebarOpen)}
           sidebarOpen={sidebarOpen}
         />
+        {suspended && (
+          <div className="bg-warn-tint border-b border-line text-warn text-sm font-medium px-4 py-2 text-center">
+            This workspace is suspended — everything is read-only. Contact
+            support to restore access.
+          </div>
+        )}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden">
           <Outlet />
         </main>

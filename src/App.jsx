@@ -6,6 +6,8 @@ import { Login } from "./components/auth/Login";
 import { Register } from "./components/auth/Register";
 import { Join } from "./pages/Join";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { SuperadminRoute } from "./components/auth/SuperadminRoute";
+import { AdminConsole } from "./pages/AdminConsole";
 import { DashboardLayout } from "./components/dashboard/DashboardLayout";
 import { Dashboard } from "./pages/Dashboard";
 import { Projects } from "./pages/Projects";
@@ -25,6 +27,15 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/join" element={<Join />} />
+
+            <Route
+              path="/admin"
+              element={
+                <SuperadminRoute>
+                  <AdminConsole />
+                </SuperadminRoute>
+              }
+            />
 
             <Route
               path="/"
