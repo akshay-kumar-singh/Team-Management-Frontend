@@ -27,7 +27,7 @@ A real-time team collaboration platform with Assistant-powered task management, 
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/yourusername/kriscent.git
+git clone https://github.com/akshay-kumar-singh/Team-Management-Frontend.git
 cd frontend
 ```
 
