@@ -2,7 +2,12 @@ import { useState, useEffect } from "react";
 import { Modal } from "../common/Modal";
 import { Button } from "../common/Button";
 import { LabelChip } from "../common/TaskIcons";
-import { TASK_STATUS, TASK_PRIORITY, TASK_TYPE } from "../../utils/constants";
+import {
+  TASK_STATUS,
+  TASK_PRIORITY,
+  TASK_TYPE,
+  DEFAULT_BOARD_COLUMNS,
+} from "../../utils/constants";
 import api from "../../services/api";
 import { Bot, X } from "lucide-react";
 
@@ -30,7 +35,14 @@ const EMPTY_FORM = {
   epicId: "",
 };
 
-export const TaskModal = ({ isOpen, onClose, onSubmit, task, epics = [] }) => {
+export const TaskModal = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  task,
+  epics = [],
+  columns = DEFAULT_BOARD_COLUMNS,
+}) => {
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [teamMembers, setTeamMembers] = useState([]);
   const [labelInput, setLabelInput] = useState("");
@@ -73,9 +85,10 @@ export const TaskModal = ({ isOpen, onClose, onSubmit, task, epics = [] }) => {
         epicId: task.epicId?._id || task.epicId || "",
       });
     } else {
-      setFormData(EMPTY_FORM);
+      // New issues start in the board's first column (custom-column aware)
+      setFormData({ ...EMPTY_FORM, status: columns[0]?.id || EMPTY_FORM.status });
     }
-  }, [task, isOpen]);
+  }, [task, isOpen, columns]);
 
   const addLabel = (raw) => {
     const value = raw.trim().replace(/,$/, "");
@@ -303,10 +316,11 @@ export const TaskModal = ({ isOpen, onClose, onSubmit, task, epics = [] }) => {
               }
               className={fieldClass}
             >
-              <option value={TASK_STATUS.TODO}>To Do</option>
-              <option value={TASK_STATUS.IN_PROGRESS}>In Progress</option>
-              <option value={TASK_STATUS.IN_REVIEW}>In Review</option>
-              <option value={TASK_STATUS.DONE}>Done</option>
+              {columns.map((col) => (
+                <option key={col.id} value={col.id}>
+                  {col.name}
+                </option>
+              ))}
             </select>
           </div>
           <div>

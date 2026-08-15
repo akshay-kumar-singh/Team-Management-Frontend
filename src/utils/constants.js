@@ -18,6 +18,28 @@ export const TASK_COLUMNS = [
   { id: "done", title: "Done", color: "from-green-500 to-emerald-500" },
 ];
 
+// Fallback board columns (matches the backend default) for legacy projects
+// whose config hasn't loaded / been migrated yet
+export const DEFAULT_BOARD_COLUMNS = [
+  { id: "todo", name: "To Do", wipLimit: null },
+  { id: "in-progress", name: "In Progress", wipLimit: null },
+  { id: "in-review", name: "In Review", wipLimit: null },
+  { id: "done", name: "Done", wipLimit: null },
+];
+
+export const columnsOf = (project) =>
+  project?.columns?.length ? project.columns : DEFAULT_BOARD_COLUMNS;
+
+export const doneColumnId = (columns) =>
+  columns?.length ? columns[columns.length - 1].id : "done";
+
+export const SWIMLANE_OPTIONS = [
+  { id: "none", label: "No swimlanes" },
+  { id: "assignee", label: "Assignee" },
+  { id: "epic", label: "Epic" },
+  { id: "priority", label: "Priority" },
+];
+
 export const TASK_PRIORITY = {
   LOW: "low",
   MEDIUM: "medium",

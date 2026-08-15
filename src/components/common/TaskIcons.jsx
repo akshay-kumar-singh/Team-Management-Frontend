@@ -83,13 +83,17 @@ const STATUS_LOZENGES = {
   done: { label: "DONE", classes: "bg-success-tint text-success" },
 };
 
-export const StatusLozenge = ({ status, className = "" }) => {
-  const lozenge = STATUS_LOZENGES[status] || STATUS_LOZENGES.todo;
+export const StatusLozenge = ({ status, label, className = "" }) => {
+  // Known default statuses keep their colors; custom columns get a neutral
+  // lozenge showing the provided label (or the id) so nothing renders blank
+  const known = STATUS_LOZENGES[status];
+  const classes = known?.classes || "bg-gray-200 text-gray-700";
+  const text = known?.label || (label || status || "").toUpperCase();
   return (
     <span
-      className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide ${lozenge.classes} ${className}`}
+      className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide ${classes} ${className}`}
     >
-      {lozenge.label}
+      {text}
     </span>
   );
 };
@@ -117,12 +121,13 @@ export const Avatar = ({ name, size = "sm" }) => {
 };
 
 // Due-date chip: red when overdue, amber when due within 3 days, gray otherwise
-export const DueDateChip = ({ dueDate, status, size = "xs" }) => {
+export const DueDateChip = ({ dueDate, status, isDone: isDoneProp, size = "xs" }) => {
   if (!dueDate) return null;
 
   const due = new Date(dueDate);
   const today = startOfDay(new Date());
-  const isDone = status === "done";
+  // Prefer an explicit isDone (custom-column boards); fall back to the default id
+  const isDone = isDoneProp !== undefined ? isDoneProp : status === "done";
   const overdue = !isDone && isBefore(due, today);
   const dueSoon =
     !isDone && !overdue && differenceInCalendarDays(due, today) <= 3;

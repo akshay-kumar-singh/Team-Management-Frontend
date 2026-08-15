@@ -4,15 +4,21 @@ import { Plus, Trash2, Check } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../../services/api";
 import { TypeIcon, StatusLozenge, Avatar, ProgressBar } from "../common/TaskIcons";
+import { columnsOf, doneColumnId } from "../../utils/constants";
 
 /**
  * Detail-page section for a task's children:
  *  - normal task → its subtasks (checkable, with add + roll-up progress)
  *  - epic       → the issues linked to it (read-only roll-up)
  */
-export const TaskChildren = ({ task, onChanged }) => {
+export const TaskChildren = ({ task, columns: columnsProp, onChanged }) => {
   const isEpic = task.type === "epic";
   const isSubtask = Boolean(task.parentId);
+  // Completion is the board's last column; "reopen" goes to the first
+  const columns = columnsProp || columnsOf(task.projectId);
+  const doneStatus = doneColumnId(columns);
+  const firstStatus = columns[0]?.id || "todo";
+  const columnName = (id) => columns.find((c) => c.id === id)?.name || id;
   const [subtasks, setSubtasks] = useState([]);
   const [epicChildren, setEpicChildren] = useState([]);
   const [newTitle, setNewTitle] = useState("");
@@ -49,7 +55,7 @@ export const TaskChildren = ({ task, onChanged }) => {
   };
 
   const toggleDone = async (sub) => {
-    const next = sub.status === "done" ? "todo" : "done";
+    const next = sub.status === doneStatus ? firstStatus : doneStatus;
     try {
       await api.put(`/api/tasks/${sub._id}`, { status: next });
       await load();
@@ -74,7 +80,7 @@ export const TaskChildren = ({ task, onChanged }) => {
   if (isSubtask) return null;
 
   const items = isEpic ? epicChildren : subtasks;
-  const done = items.filter((t) => t.status === "done").length;
+  const done = items.filter((t) => t.status === doneStatus).length;
 
   return (
     <div className="bg-white rounded-lg border border-line p-5">
@@ -104,14 +110,14 @@ export const TaskChildren = ({ task, onChanged }) => {
             ) : (
               <button
                 onClick={() => toggleDone(child)}
-                title={child.status === "done" ? "Mark as to do" : "Mark as done"}
+                title={child.status === doneStatus ? "Reopen" : "Mark as done"}
                 className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${
-                  child.status === "done"
+                  child.status === doneStatus
                     ? "bg-success border-success text-white"
                     : "border-line hover:border-brand"
                 }`}
               >
-                {child.status === "done" && <Check size={11} />}
+                {child.status === doneStatus && <Check size={11} />}
               </button>
             )}
 
@@ -124,13 +130,13 @@ export const TaskChildren = ({ task, onChanged }) => {
 
             <span
               className={`text-sm flex-1 truncate ${
-                child.status === "done" ? "line-through text-ink-subtle" : "text-ink"
+                child.status === doneStatus ? "line-through text-ink-subtle" : "text-ink"
               }`}
             >
               {child.title}
             </span>
 
-            {isEpic && <StatusLozenge status={child.status} />}
+            {isEpic && <StatusLozenge status={child.status} label={columnName(child.status)} />}
             {child.assignedTo && <Avatar name={child.assignedTo.name} size="xs" />}
 
             {!isEpic && (

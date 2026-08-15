@@ -22,7 +22,7 @@ import {
   DueDateChip,
   LabelChip,
 } from "../components/common/TaskIcons";
-import { AGENT_STATUS_LABELS, TASK_STATUS } from "../utils/constants";
+import { AGENT_STATUS_LABELS, columnsOf, doneColumnId } from "../utils/constants";
 import { formatDateTime } from "../utils/helpers";
 
 const fieldClass =
@@ -125,6 +125,9 @@ export const TaskDetail = () => {
   }
 
   const agentStatus = task.agentJobId?.status;
+  const columns = columnsOf(task.projectId);
+  const doneStatus = doneColumnId(columns);
+  const statusName = columns.find((c) => c.id === task.status)?.name;
 
   return (
     <div>
@@ -247,7 +250,7 @@ export const TaskDetail = () => {
           )}
 
           {/* Subtasks / epic child issues */}
-          <TaskChildren task={task} onChanged={fetchTask} />
+          <TaskChildren task={task} columns={columns} onChanged={fetchTask} />
 
           {/* Comments & history */}
           <TaskActivitySection
@@ -275,12 +278,13 @@ export const TaskDetail = () => {
                   onChange={(e) => save({ status: e.target.value })}
                   className={fieldClass}
                 >
-                  <option value={TASK_STATUS.TODO}>To Do</option>
-                  <option value={TASK_STATUS.IN_PROGRESS}>In Progress</option>
-                  <option value={TASK_STATUS.IN_REVIEW}>In Review</option>
-                  <option value={TASK_STATUS.DONE}>Done</option>
+                  {columns.map((col) => (
+                    <option key={col.id} value={col.id}>
+                      {col.name}
+                    </option>
+                  ))}
                 </select>
-                <StatusLozenge status={task.status} />
+                <StatusLozenge status={task.status} label={statusName} />
               </div>
             </div>
 
@@ -451,7 +455,7 @@ export const TaskDetail = () => {
                 <div className="mt-1.5">
                   <DueDateChip
                     dueDate={task.dueDate}
-                    status={task.status}
+                    isDone={task.status === doneStatus}
                     size="sm"
                   />
                 </div>
@@ -480,6 +484,7 @@ export const TaskDetail = () => {
         }}
         task={task}
         epics={epics}
+        columns={columns}
       />
     </div>
   );

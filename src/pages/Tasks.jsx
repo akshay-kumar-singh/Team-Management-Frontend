@@ -3,15 +3,32 @@ import { TaskAssistant } from "../components/assistant/TaskAssistant";
 import { AgentActivityPanel } from "../components/agent/AgentActivityPanel";
 import { useTasks } from "../hooks/useTasks";
 import { useSearchParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import api from "../services/api";
 import toast from "react-hot-toast";
 
 export const Tasks = () => {
   const [searchParams] = useSearchParams();
   const projectId = searchParams.get("projectId");
-  const { tasks, createTask, updateTask, deleteTask } = useTasks(projectId);
+  const { tasks, createTask, updateTask, deleteTask, reorderColumn, fetchTasks } =
+    useTasks(projectId);
   const [teamMembers, setTeamMembers] = useState([]);
+  const [project, setProject] = useState(null);
+
+  // Board config (columns / transitions) lives on the project
+  const fetchProject = useCallback(async () => {
+    if (!projectId) return;
+    try {
+      const { data } = await api.get("/api/projects");
+      setProject(data.find((p) => p._id === projectId) || null);
+    } catch {
+      /* board falls back to default columns */
+    }
+  }, [projectId]);
+
+  useEffect(() => {
+    fetchProject();
+  }, [fetchProject]);
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -96,9 +113,13 @@ export const Tasks = () => {
       {/* Kanban Board - full width */}
       <KanbanBoard
         tasks={tasks}
+        project={project}
         createTask={createTask}
         updateTask={updateTask}
         deleteTask={deleteTask}
+        reorderColumn={reorderColumn}
+        fetchTasks={fetchTasks}
+        onProjectUpdated={setProject}
       />
 
       {/* AI Panels - side by side on large screens, stacked on mobile */}

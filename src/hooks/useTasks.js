@@ -53,6 +53,27 @@ export const useTasks = (projectId) => {
     }
   };
 
+  // Persist a column's new manual order (and cards moved into it). Applies an
+  // optimistic reorder, then reconciles with the server; reverts on failure.
+  const reorderColumn = async (column, orderedIds, movedId) => {
+    const previousTasks = tasks;
+    setTasks((prev) =>
+      prev.map((t) => {
+        const idx = orderedIds.indexOf(t._id);
+        if (idx === -1) return t;
+        return { ...t, status: column, order: idx };
+      })
+    );
+    try {
+      await api.patch("/api/tasks/reorder", { projectId, column, orderedIds });
+    } catch (error) {
+      setTasks(previousTasks); // revert (e.g. a blocked workflow transition)
+      toast.error(error.message);
+      throw error;
+    }
+    return movedId;
+  };
+
   const deleteTask = async (id) => {
     try {
       await api.delete(`/api/tasks/${id}`);
@@ -81,5 +102,5 @@ export const useTasks = (projectId) => {
     return () => socket.off("task-updated", handleTaskUpdated);
   }, [socket]);
 
-  return { tasks, loading, createTask, updateTask, deleteTask, fetchTasks };
+  return { tasks, loading, createTask, updateTask, deleteTask, reorderColumn, fetchTasks };
 };

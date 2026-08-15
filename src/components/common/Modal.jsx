@@ -1,7 +1,9 @@
 import { X } from "lucide-react";
 import { useEffect } from "react";
 
-export const Modal = ({ isOpen, onClose, title, children }) => {
+const SIZES = { lg: "max-w-lg", xl: "max-w-xl", "2xl": "max-w-2xl", "3xl": "max-w-3xl" };
+
+export const Modal = ({ isOpen, onClose, title, children, size = "lg" }) => {
   // Prevent body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
@@ -22,7 +24,9 @@ export const Modal = ({ isOpen, onClose, title, children }) => {
         className="absolute inset-0 bg-black/55"
         onClick={onClose}
       />
-      <div className="relative bg-white rounded-lg shadow-2xl w-full max-w-lg z-10 border border-line flex flex-col max-h-[90vh] animate-scaleIn">
+      <div
+        className={`relative bg-white rounded-lg shadow-2xl w-full ${SIZES[size] || SIZES.lg} z-10 border border-line flex flex-col max-h-[90vh] animate-scaleIn`}
+      >
         {/* Header */}
         <div className="flex justify-between items-center px-6 py-4 border-b border-line flex-shrink-0">
           <h2 className="text-lg font-semibold text-ink">{title}</h2>

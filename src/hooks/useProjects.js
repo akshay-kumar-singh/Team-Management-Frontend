@@ -17,7 +17,11 @@ export const useProjects = () => {
           const taskRes = await api.get(`/api/tasks?projectId=${project._id}`);
           const tasks = taskRes.data;
           const total = tasks.length;
-          const doneTasks = tasks.filter((t) => t.status === "done").length;
+          // "Done" is the project's last board column (custom-column aware)
+          const doneId = project.columns?.length
+            ? project.columns[project.columns.length - 1].id
+            : "done";
+          const doneTasks = tasks.filter((t) => t.status === doneId).length;
 
           let status = "Active";
           if (total > 0 && doneTasks === total) status = "Completed";

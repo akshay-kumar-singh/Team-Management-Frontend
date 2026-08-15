@@ -12,7 +12,7 @@ import {
 } from "../common/TaskIcons";
 import { AGENT_STATUS_LABELS } from "../../utils/constants";
 
-export const TaskCard = ({ task, index, onEdit, onDelete, epicProgress }) => {
+export const TaskCard = ({ task, index, onEdit, onDelete, epicProgress, isDone }) => {
   const navigate = useNavigate();
   const agentStatus = task.agentJobId?.status;
   const isEpic = task.type === "epic";
@@ -98,7 +98,7 @@ export const TaskCard = ({ task, index, onEdit, onDelete, epicProgress }) => {
           {/* Badges row: due date, AI, agent status, PR */}
           {(task.dueDate || task.assignedToAI || (agentStatus && agentStatus !== "completed") || task.prLink) && (
             <div className="flex items-center gap-1.5 mb-2 flex-wrap">
-              <DueDateChip dueDate={task.dueDate} status={task.status} />
+              <DueDateChip dueDate={task.dueDate} isDone={isDone} />
               {task.assignedToAI && (
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700">
                   <Bot size={10} /> AI
