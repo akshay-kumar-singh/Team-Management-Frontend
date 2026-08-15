@@ -12,6 +12,7 @@ import api from "../services/api";
 import toast from "react-hot-toast";
 import { Button } from "../components/common/Button";
 import { TaskModal } from "../components/tasks/TaskModal";
+import { TaskChildren } from "../components/tasks/TaskChildren";
 import { TaskActivitySection } from "../components/tasks/TaskActivitySection";
 import {
   TypeIcon,
@@ -19,6 +20,7 @@ import {
   StatusLozenge,
   Avatar,
   DueDateChip,
+  LabelChip,
 } from "../components/common/TaskIcons";
 import { AGENT_STATUS_LABELS, TASK_STATUS } from "../utils/constants";
 import { formatDateTime } from "../utils/helpers";
@@ -35,6 +37,8 @@ export const TaskDetail = () => {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [teamMembers, setTeamMembers] = useState([]);
+  const [epics, setEpics] = useState([]);
+  const [labelInput, setLabelInput] = useState("");
   const [isEditOpen, setIsEditOpen] = useState(false);
 
   const fetchTask = useCallback(async () => {
@@ -60,6 +64,16 @@ export const TaskDetail = () => {
       .then(({ data }) => setTeamMembers(data))
       .catch(() => {});
   }, []);
+
+  // Epics of this task's project, for the epic dropdown + edit modal
+  useEffect(() => {
+    const pid = task?.projectId?._id;
+    if (!pid) return;
+    api
+      .get(`/api/tasks?projectId=${pid}`)
+      .then(({ data }) => setEpics(data.filter((t) => t.type === "epic")))
+      .catch(() => {});
+  }, [task?.projectId?._id]);
 
   // Save one or more fields, then refetch so populated fields stay intact
   const save = async (fields) => {
@@ -232,6 +246,9 @@ export const TaskDetail = () => {
             </div>
           )}
 
+          {/* Subtasks / epic child issues */}
+          <TaskChildren task={task} onChanged={fetchTask} />
+
           {/* Comments & history */}
           <TaskActivitySection
             taskId={task._id}
@@ -321,6 +338,93 @@ export const TaskDetail = () => {
               </div>
             </div>
 
+            {/* Story points */}
+            <div>
+              <label className="block text-xs font-semibold text-ink-subtle mb-1.5">
+                Story points
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                defaultValue={task.storyPoints ?? ""}
+                key={`sp-${task.storyPoints}`}
+                onBlur={(e) => {
+                  const v = e.target.value;
+                  if ((v === "" ? null : Number(v)) !== (task.storyPoints ?? null)) {
+                    save({ storyPoints: v });
+                  }
+                }}
+                placeholder="—"
+                className={fieldClass}
+              />
+            </div>
+
+            {/* Epic link (not shown for epics themselves) */}
+            {task.type !== "epic" && (
+              <div>
+                <label className="block text-xs font-semibold text-ink-subtle mb-1.5">
+                  Epic
+                </label>
+                <select
+                  value={task.epicId?._id || task.epicId || ""}
+                  onChange={(e) => save({ epicId: e.target.value })}
+                  className={fieldClass}
+                >
+                  <option value="">None</option>
+                  {epics
+                    .filter((ep) => ep._id !== task._id)
+                    .map((ep) => (
+                      <option key={ep._id} value={ep._id}>
+                        {ep.key ? `${ep.key} · ${ep.title}` : ep.title}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            )}
+
+            {/* Labels */}
+            <div>
+              <label className="block text-xs font-semibold text-ink-subtle mb-1.5">
+                Labels
+              </label>
+              <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                {(task.labels || []).length === 0 && (
+                  <span className="text-sm text-ink-subtle italic">None</span>
+                )}
+                {(task.labels || []).map((label) => (
+                  <span key={label} className="inline-flex items-center gap-1">
+                    <LabelChip label={label} />
+                    <button
+                      onClick={() =>
+                        save({ labels: task.labels.filter((l) => l !== label) })
+                      }
+                      className="text-ink-subtle hover:text-danger"
+                      title="Remove label"
+                    >
+                      <X size={11} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <input
+                value={labelInput}
+                onChange={(e) => setLabelInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === ",") {
+                    e.preventDefault();
+                    const v = labelInput.trim().replace(/,$/, "");
+                    if (v && !(task.labels || []).includes(v)) {
+                      save({ labels: [...(task.labels || []), v] });
+                    }
+                    setLabelInput("");
+                  }
+                }}
+                placeholder="Add a label..."
+                className={fieldClass}
+              />
+            </div>
+
             {/* Dates */}
             <div>
               <label className="block text-xs font-semibold text-ink-subtle mb-1.5">
@@ -375,6 +479,7 @@ export const TaskDetail = () => {
           await save(data);
         }}
         task={task}
+        epics={epics}
       />
     </div>
   );

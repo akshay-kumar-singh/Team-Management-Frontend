@@ -2,6 +2,7 @@ import {
   SquareCheck,
   Bug,
   Bookmark,
+  Zap,
   ChevronUp,
   ChevronsUp,
   Equal,
@@ -9,12 +10,59 @@ import {
   CalendarDays,
 } from "lucide-react";
 import { format, isBefore, startOfDay, differenceInCalendarDays } from "date-fns";
+import { labelColor } from "../../utils/constants";
 
-// Jira-style issue type icon: task = blue check, bug = red, feature = green bookmark
+// Jira-style issue type icon: task = blue check, bug = red, feature = green bookmark, epic = purple bolt
 export const TypeIcon = ({ type, size = 14 }) => {
   if (type === "bug") return <Bug size={size} className="text-danger flex-shrink-0" />;
   if (type === "feature") return <Bookmark size={size} className="text-success flex-shrink-0" />;
+  if (type === "epic") return <Zap size={size} className="text-purple-600 flex-shrink-0" />;
   return <SquareCheck size={size} className="text-brand flex-shrink-0" />;
+};
+
+// A single label/tag chip with a color derived from its text
+export const LabelChip = ({ label, size = "xs" }) => (
+  <span
+    className={`inline-flex items-center rounded font-medium ${labelColor(label)} ${
+      size === "xs" ? "px-1.5 py-0.5 text-[10px]" : "px-2 py-0.5 text-xs"
+    }`}
+  >
+    {label}
+  </span>
+);
+
+// Story-point estimate badge (Jira shows a small grey pill)
+export const StoryPoints = ({ points, size = "xs" }) => {
+  if (points === null || points === undefined || points === "") return null;
+  return (
+    <span
+      title={`${points} story point${points === 1 ? "" : "s"}`}
+      className={`inline-flex items-center justify-center rounded-full bg-gray-200 text-ink-subtle font-semibold ${
+        size === "xs" ? "min-w-[18px] h-[18px] px-1 text-[10px]" : "min-w-[22px] h-[22px] px-1.5 text-xs"
+      }`}
+    >
+      {points}
+    </span>
+  );
+};
+
+// Roll-up progress bar for epics / subtask groups
+export const ProgressBar = ({ done = 0, total = 0, className = "" }) => {
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  return (
+    <div className={className}>
+      <div className="flex items-center justify-between text-[11px] text-ink-subtle mb-1">
+        <span>{total ? `${done} of ${total} done` : "No child issues yet"}</span>
+        {total > 0 && <span className="font-semibold">{pct}%</span>}
+      </div>
+      <div className="h-1.5 bg-column rounded-full overflow-hidden">
+        <div
+          className="h-full bg-success rounded-full transition-all duration-300"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
 };
 
 // Jira-style priority arrows

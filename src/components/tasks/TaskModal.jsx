@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { Modal } from "../common/Modal";
 import { Button } from "../common/Button";
+import { LabelChip } from "../common/TaskIcons";
 import { TASK_STATUS, TASK_PRIORITY, TASK_TYPE } from "../../utils/constants";
 import api from "../../services/api";
-import { Bot } from "lucide-react";
+import { Bot, X } from "lucide-react";
 
 const fieldClass =
   "w-full px-3 py-2 bg-white border border-line rounded text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors";
@@ -24,11 +25,15 @@ const EMPTY_FORM = {
   repoUrl: "",
   startDate: "",
   dueDate: "",
+  labels: [],
+  storyPoints: "",
+  epicId: "",
 };
 
-export const TaskModal = ({ isOpen, onClose, onSubmit, task }) => {
+export const TaskModal = ({ isOpen, onClose, onSubmit, task, epics = [] }) => {
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [teamMembers, setTeamMembers] = useState([]);
+  const [labelInput, setLabelInput] = useState("");
 
   useEffect(() => {
     if (isOpen) {
@@ -49,6 +54,7 @@ export const TaskModal = ({ isOpen, onClose, onSubmit, task }) => {
   // typed-but-unsaved values never leak into a fresh form
   useEffect(() => {
     if (!isOpen) return;
+    setLabelInput("");
     if (task) {
       setFormData({
         title: task.title,
@@ -62,15 +68,46 @@ export const TaskModal = ({ isOpen, onClose, onSubmit, task }) => {
         repoUrl: task.repoUrl || "",
         startDate: toDateInput(task.startDate),
         dueDate: toDateInput(task.dueDate),
+        labels: task.labels || [],
+        storyPoints: task.storyPoints ?? "",
+        epicId: task.epicId?._id || task.epicId || "",
       });
     } else {
       setFormData(EMPTY_FORM);
     }
   }, [task, isOpen]);
 
+  const addLabel = (raw) => {
+    const value = raw.trim().replace(/,$/, "");
+    if (!value) return;
+    if (!formData.labels.includes(value) && formData.labels.length < 20) {
+      setFormData((f) => ({ ...f, labels: [...f.labels, value] }));
+    }
+    setLabelInput("");
+  };
+
+  const removeLabel = (label) =>
+    setFormData((f) => ({ ...f, labels: f.labels.filter((l) => l !== label) }));
+
+  const handleLabelKeyDown = (e) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      addLabel(labelInput);
+    } else if (e.key === "Backspace" && !labelInput && formData.labels.length) {
+      removeLabel(formData.labels[formData.labels.length - 1]);
+    }
+  };
+
+  // Epics can't nest under other epics; a task can't be its own epic
+  const epicOptions = epics.filter((e) => e._id !== task?._id);
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    // Fold any half-typed label into the list before saving
+    const labels = labelInput.trim()
+      ? [...new Set([...formData.labels, labelInput.trim()])]
+      : formData.labels;
+    onSubmit({ ...formData, labels });
     onClose();
   };
 
@@ -104,13 +141,19 @@ export const TaskModal = ({ isOpen, onClose, onSubmit, task }) => {
             <select
               value={formData.type}
               onChange={(e) =>
-                setFormData({ ...formData, type: e.target.value })
+                setFormData({
+                  ...formData,
+                  type: e.target.value,
+                  // an epic can't belong to another epic
+                  epicId: e.target.value === "epic" ? "" : formData.epicId,
+                })
               }
               className={fieldClass}
             >
               <option value="task">Task</option>
               <option value="bug">Bug</option>
               <option value="feature">Feature</option>
+              <option value="epic">Epic</option>
             </select>
           </div>
           <div>
@@ -153,6 +196,70 @@ export const TaskModal = ({ isOpen, onClose, onSubmit, task }) => {
                 setFormData({ ...formData, dueDate: e.target.value })
               }
               className={fieldClass}
+            />
+          </div>
+        </div>
+
+        {/* Story points & Epic row */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelClass}>Story points</label>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={formData.storyPoints}
+              onChange={(e) =>
+                setFormData({ ...formData, storyPoints: e.target.value })
+              }
+              placeholder="e.g. 3"
+              className={fieldClass}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Epic</label>
+            <select
+              value={formData.epicId}
+              onChange={(e) =>
+                setFormData({ ...formData, epicId: e.target.value })
+              }
+              disabled={formData.type === "epic"}
+              className={`${fieldClass} disabled:opacity-50`}
+            >
+              <option value="">None</option>
+              {epicOptions.map((e) => (
+                <option key={e._id} value={e._id}>
+                  {e.key ? `${e.key} · ${e.title}` : e.title}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Labels */}
+        <div>
+          <label className={labelClass}>Labels</label>
+          <div className={`${fieldClass} flex flex-wrap items-center gap-1.5 min-h-[38px]`}>
+            {formData.labels.map((label) => (
+              <span key={label} className="inline-flex items-center gap-1">
+                <LabelChip label={label} />
+                <button
+                  type="button"
+                  onClick={() => removeLabel(label)}
+                  className="text-ink-subtle hover:text-danger"
+                  title="Remove label"
+                >
+                  <X size={11} />
+                </button>
+              </span>
+            ))}
+            <input
+              value={labelInput}
+              onChange={(e) => setLabelInput(e.target.value)}
+              onKeyDown={handleLabelKeyDown}
+              onBlur={() => addLabel(labelInput)}
+              placeholder={formData.labels.length ? "" : "Add labels (Enter or comma)"}
+              className="flex-1 min-w-[100px] outline-none text-sm bg-transparent"
             />
           </div>
         </div>

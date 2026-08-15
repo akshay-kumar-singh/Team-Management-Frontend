@@ -1,7 +1,7 @@
 import { Droppable } from "@hello-pangea/dnd";
 import { TaskCard } from "./TaskCard";
 
-export const Column = ({ column, tasks, onEditTask, onDeleteTask }) => {
+export const Column = ({ column, tasks, onEditTask, onDeleteTask, epicProgressMap = {} }) => {
   return (
     <div className="bg-column rounded-md p-2 min-h-[400px] flex flex-col">
       <div className="flex items-center gap-2 px-2 py-2 mb-1">
@@ -29,6 +29,7 @@ export const Column = ({ column, tasks, onEditTask, onDeleteTask }) => {
                 index={index}
                 onEdit={onEditTask}
                 onDelete={onDeleteTask}
+                epicProgress={epicProgressMap[task._id]}
               />
             ))}
             {provided.placeholder}

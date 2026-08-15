@@ -6,12 +6,17 @@ import {
   PriorityIcon,
   Avatar,
   DueDateChip,
+  LabelChip,
+  StoryPoints,
+  ProgressBar,
 } from "../common/TaskIcons";
 import { AGENT_STATUS_LABELS } from "../../utils/constants";
 
-export const TaskCard = ({ task, index, onEdit, onDelete }) => {
+export const TaskCard = ({ task, index, onEdit, onDelete, epicProgress }) => {
   const navigate = useNavigate();
   const agentStatus = task.agentJobId?.status;
+  const isEpic = task.type === "epic";
+  const labels = task.labels || [];
 
   const openDetail = () => {
     if (task.key) navigate(`/browse/${task.key}`);
@@ -29,6 +34,15 @@ export const TaskCard = ({ task, index, onEdit, onDelete }) => {
             snapshot.isDragging ? "shadow-lg ring-2 ring-brand/40 rotate-1" : ""
           }`}
         >
+          {/* Epic link chip (for issues that belong to an epic) */}
+          {task.epicId?.key && !isEpic && (
+            <div className="mb-1.5">
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-100 text-purple-700">
+                <Zap size={9} /> {task.epicId.key}
+              </span>
+            </div>
+          )}
+
           {/* Title + hover actions */}
           <div className="flex items-start justify-between gap-2 mb-2">
             <h4 className="text-sm text-ink leading-snug flex-1 group-hover:text-brand">
@@ -57,6 +71,29 @@ export const TaskCard = ({ task, index, onEdit, onDelete }) => {
               </button>
             </div>
           </div>
+
+          {/* Epic roll-up progress */}
+          {isEpic && epicProgress && (
+            <ProgressBar
+              done={epicProgress.done}
+              total={epicProgress.total}
+              className="mb-2"
+            />
+          )}
+
+          {/* Labels */}
+          {labels.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1 mb-2">
+              {labels.slice(0, 3).map((label) => (
+                <LabelChip key={label} label={label} />
+              ))}
+              {labels.length > 3 && (
+                <span className="text-[10px] text-ink-subtle font-medium">
+                  +{labels.length - 3}
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Badges row: due date, AI, agent status, PR */}
           {(task.dueDate || task.assignedToAI || (agentStatus && agentStatus !== "completed") || task.prLink) && (
@@ -98,6 +135,7 @@ export const TaskCard = ({ task, index, onEdit, onDelete }) => {
               )}
             </div>
             <div className="flex items-center gap-1.5 flex-shrink-0">
+              <StoryPoints points={task.storyPoints} />
               <PriorityIcon priority={task.priority} />
               {task.assignedTo && <Avatar name={task.assignedTo.name} size="xs" />}
             </div>

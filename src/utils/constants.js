@@ -29,6 +29,7 @@ export const TASK_TYPE = {
   TASK: "task",
   BUG: "bug",
   FEATURE: "feature",
+  EPIC: "epic",
 };
 
 export const AGENT_STATUS_LABELS = {
@@ -54,6 +55,25 @@ export const TYPE_ICONS = {
   task: "📋",
   bug: "🐛",
   feature: "✨",
+  epic: "🗲",
+};
+
+// Deterministic chip color for a label string (same label → same color)
+export const LABEL_PALETTE = [
+  "bg-blue-100 text-blue-700",
+  "bg-purple-100 text-purple-700",
+  "bg-emerald-100 text-emerald-700",
+  "bg-amber-100 text-amber-700",
+  "bg-pink-100 text-pink-700",
+  "bg-cyan-100 text-cyan-700",
+  "bg-indigo-100 text-indigo-700",
+  "bg-rose-100 text-rose-700",
+];
+
+export const labelColor = (label = "") => {
+  let hash = 0;
+  for (let i = 0; i < label.length; i++) hash = (hash * 31 + label.charCodeAt(i)) >>> 0;
+  return LABEL_PALETTE[hash % LABEL_PALETTE.length];
 };
 
 export const API_ENDPOINTS = {
