@@ -2,6 +2,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Folder,
+  ListTodo,
   CheckSquare,
   MessageSquare,
   Users,
@@ -17,6 +18,7 @@ export const Sidebar = () => {
   const links = [
     { path: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
     { path: "/projects", icon: Folder, label: "Projects" },
+    { path: "/backlog", icon: ListTodo, label: "Backlog" },
     { path: "/tasks", icon: CheckSquare, label: "Board" },
     { path: "/chat", icon: MessageSquare, label: "Chat" },
     { path: "/team", icon: Users, label: "Team" },

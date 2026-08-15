@@ -12,6 +12,7 @@ import { DashboardLayout } from "./components/dashboard/DashboardLayout";
 import { Dashboard } from "./pages/Dashboard";
 import { Projects } from "./pages/Projects";
 import { Tasks } from "./pages/Tasks";
+import { Backlog } from "./pages/Backlog";
 import { Chat } from "./pages/Chat";
 import { Team } from "./pages/Team";
 import { TaskDetail } from "./pages/TaskDetail";
@@ -48,6 +49,7 @@ function App() {
               <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="projects" element={<Projects />} />
+              <Route path="backlog" element={<Backlog />} />
               <Route path="tasks" element={<Tasks />} />
               <Route path="chat" element={<Chat />} />
               <Route path="team" element={<Team />} />

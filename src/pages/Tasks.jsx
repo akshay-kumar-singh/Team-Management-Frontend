@@ -1,11 +1,16 @@
 import { KanbanBoard } from "../components/tasks/KanbanBoard";
 import { TaskAssistant } from "../components/assistant/TaskAssistant";
 import { AgentActivityPanel } from "../components/agent/AgentActivityPanel";
+import { CompleteSprintModal } from "../components/sprints/CompleteSprintModal";
+import { SprintReportModal } from "../components/sprints/SprintReportModal";
+import { Button } from "../components/common/Button";
 import { useTasks } from "../hooks/useTasks";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { useCallback, useEffect, useState } from "react";
+import { CheckCircle2, ListTodo, Target } from "lucide-react";
 import api from "../services/api";
 import toast from "react-hot-toast";
+import { columnsOf, doneColumnId } from "../utils/constants";
 
 export const Tasks = () => {
   const [searchParams] = useSearchParams();
@@ -14,6 +19,9 @@ export const Tasks = () => {
     useTasks(projectId);
   const [teamMembers, setTeamMembers] = useState([]);
   const [project, setProject] = useState(null);
+  const [sprints, setSprints] = useState([]);
+  const [completing, setCompleting] = useState(false);
+  const [reportSprint, setReportSprint] = useState(null);
 
   // Board config (columns / transitions) lives on the project
   const fetchProject = useCallback(async () => {
@@ -26,9 +34,20 @@ export const Tasks = () => {
     }
   }, [projectId]);
 
+  const fetchSprints = useCallback(async () => {
+    if (!projectId) return;
+    try {
+      const { data } = await api.get(`/api/sprints?projectId=${projectId}`);
+      setSprints(data);
+    } catch {
+      /* no sprints → plain Kanban board */
+    }
+  }, [projectId]);
+
   useEffect(() => {
     fetchProject();
-  }, [fetchProject]);
+    fetchSprints();
+  }, [fetchProject, fetchSprints]);
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -108,8 +127,52 @@ export const Tasks = () => {
     }
   };
 
+  const activeSprint = sprints.find((s) => s.status === "active");
+  const futureSprints = sprints.filter((s) => s.status === "future");
+  const doneStatus = doneColumnId(columnsOf(project));
+  const doneCount = tasks.filter((t) => t.status === doneStatus).length;
+
   return (
     <div className="space-y-6">
+      {/* Sprint banner / backlog link */}
+      {projectId && (
+        <div
+          className={`flex flex-wrap items-center gap-3 rounded-lg border px-4 py-2.5 ${
+            activeSprint ? "bg-brand-tint border-brand" : "bg-white border-line"
+          }`}
+        >
+          {activeSprint ? (
+            <>
+              <span className="text-sm font-semibold text-ink">{activeSprint.name}</span>
+              {activeSprint.goal && (
+                <span className="hidden sm:inline-flex items-center gap-1 text-xs text-ink-subtle">
+                  <Target size={12} /> {activeSprint.goal}
+                </span>
+              )}
+              <span className="text-xs text-ink-subtle">
+                {doneCount}/{tasks.length} done
+              </span>
+              <div className="flex-1" />
+              <Button variant="secondary" onClick={() => setCompleting(true)}>
+                <CheckCircle2 size={14} className="mr-1" /> Complete sprint
+              </Button>
+            </>
+          ) : (
+            <>
+              <span className="text-sm text-ink-subtle">
+                No active sprint — the board shows your backlog.
+              </span>
+              <div className="flex-1" />
+            </>
+          )}
+          <Link to={`/backlog?projectId=${projectId}`}>
+            <Button variant="outline">
+              <ListTodo size={14} className="mr-1" /> Backlog
+            </Button>
+          </Link>
+        </div>
+      )}
+
       {/* Kanban Board - full width */}
       <KanbanBoard
         tasks={tasks}
@@ -127,6 +190,26 @@ export const Tasks = () => {
         <TaskAssistant onTaskAction={handleTaskAction} tasks={tasks} />
         <AgentActivityPanel />
       </div>
+
+      <CompleteSprintModal
+        isOpen={completing}
+        onClose={() => setCompleting(false)}
+        sprint={activeSprint}
+        futureSprints={futureSprints}
+        totalCount={tasks.length}
+        doneCount={doneCount}
+        onComplete={async (id, data) => {
+          const { data: done } = await api.post(`/api/sprints/${id}/complete`, data);
+          await Promise.all([fetchTasks(), fetchSprints()]);
+          if (done?.report) setReportSprint(done);
+        }}
+      />
+
+      <SprintReportModal
+        isOpen={Boolean(reportSprint)}
+        onClose={() => setReportSprint(null)}
+        sprint={reportSprint}
+      />
     </div>
   );
 };

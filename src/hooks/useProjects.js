@@ -14,7 +14,8 @@ export const useProjects = () => {
     const projectsWithStatus = await Promise.all(
       data.map(async (project) => {
         try {
-          const taskRes = await api.get(`/api/tasks?projectId=${project._id}`);
+          // all=true → count every issue, not just the active sprint / backlog
+          const taskRes = await api.get(`/api/tasks?projectId=${project._id}&all=true`);
           const tasks = taskRes.data;
           const total = tasks.length;
           // "Done" is the project's last board column (custom-column aware)
