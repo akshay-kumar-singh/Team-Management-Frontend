@@ -1,14 +1,15 @@
-import { Edit, Trash2, Calendar, CheckCircle2 } from "lucide-react";
+import { Edit, Trash2, Calendar, CheckCircle2, Star } from "lucide-react";
 import { USER_ROLES } from "../../utils/constants";
 import { useAuth } from "../../hooks/useAuth";
 import { formatDate } from "../../utils/helpers";
 
 export const ProjectCard = ({ project, onEdit, onDelete, onClick }) => {
-  const { userData } = useAuth();
+  const { userData, toggleStar } = useAuth();
   const canEdit =
     userData?.role === USER_ROLES.ADMIN ||
     userData?.role === USER_ROLES.MANAGER;
   const canDelete = userData?.role === USER_ROLES.ADMIN;
+  const starred = (userData?.starredProjects || []).some((id) => id === project._id);
 
   const progress =
     project.total > 0
@@ -23,16 +24,30 @@ export const ProjectCard = ({ project, onEdit, onDelete, onClick }) => {
           <div className="w-10 h-10 bg-brand rounded flex items-center justify-center text-white font-bold text-sm">
             {(project.key || project.name || "P").slice(0, 2).toUpperCase()}
           </div>
-          <span
-            className={`px-2 py-0.5 text-[10px] font-bold tracking-wide rounded flex items-center gap-1 ${
-              project.status === "Completed"
-                ? "bg-brand-tint text-brand"
-                : "bg-success-tint text-success"
-            }`}
-          >
-            {project.status === "Completed" && <CheckCircle2 size={11} />}
-            {(project.status || "Active").toUpperCase()}
-          </span>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleStar("project", project._id);
+              }}
+              title={starred ? "Unstar" : "Star"}
+              className={`p-1 rounded hover:bg-gray-100 transition-colors ${
+                starred ? "text-warn" : "text-ink-subtle opacity-0 group-hover:opacity-100"
+              }`}
+            >
+              <Star size={15} fill={starred ? "currentColor" : "none"} />
+            </button>
+            <span
+              className={`px-2 py-0.5 text-[10px] font-bold tracking-wide rounded flex items-center gap-1 ${
+                project.status === "Completed"
+                  ? "bg-brand-tint text-brand"
+                  : "bg-success-tint text-success"
+              }`}
+            >
+              {project.status === "Completed" && <CheckCircle2 size={11} />}
+              {(project.status || "Active").toUpperCase()}
+            </span>
+          </div>
         </div>
 
         <div className="flex items-center gap-2 mb-1">

@@ -15,6 +15,29 @@ export const DashboardLayout = () => {
     setSidebarOpen(false);
   }, [location.pathname]);
 
+  // Global keyboard shortcuts: "/" focuses search, "c" opens the create dialog.
+  // Ignored while typing in a field.
+  useEffect(() => {
+    const onKey = (e) => {
+      const el = e.target;
+      const typing =
+        el.tagName === "INPUT" ||
+        el.tagName === "TEXTAREA" ||
+        el.tagName === "SELECT" ||
+        el.isContentEditable;
+      if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
+
+      if (e.key === "/") {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent("workzen:focus-search"));
+      } else if (e.key === "c") {
+        window.dispatchEvent(new CustomEvent("workzen:create"));
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Overlay for mobile sidebar */}

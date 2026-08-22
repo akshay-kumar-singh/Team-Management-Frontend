@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { DragDropContext } from "@hello-pangea/dnd";
 import { Plus, LayoutGrid, FileBarChart } from "lucide-react";
 import toast from "react-hot-toast";
@@ -8,6 +8,7 @@ import { useSprints } from "../hooks/useSprints";
 import { SprintSection } from "../components/sprints/SprintSection";
 import { CompleteSprintModal } from "../components/sprints/CompleteSprintModal";
 import { SprintReportModal } from "../components/sprints/SprintReportModal";
+import { ViewTabs } from "../components/common/ViewTabs";
 import { Button } from "../components/common/Button";
 import { columnsOf, doneColumnId } from "../utils/constants";
 
@@ -110,6 +111,8 @@ export const Backlog = () => {
 
   return (
     <div>
+      <ViewTabs projectId={projectId} />
+
       <div className="flex justify-between items-center mb-4">
         <div>
           <h1 className="text-xl font-semibold text-ink">Backlog</h1>
@@ -117,16 +120,9 @@ export const Backlog = () => {
             {project?.name || "Project"} · plan sprints and rank work
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Link to={`/tasks?projectId=${projectId}`}>
-            <Button variant="secondary">
-              <LayoutGrid size={15} className="mr-1" /> Board
-            </Button>
-          </Link>
-          <Button onClick={createSprint}>
-            <Plus size={16} className="mr-1" /> Create sprint
-          </Button>
-        </div>
+        <Button onClick={createSprint}>
+          <Plus size={16} className="mr-1" /> Create sprint
+        </Button>
       </div>
 
       {loading ? (

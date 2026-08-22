@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DragDropContext } from "@hello-pangea/dnd";
 import { Plus, LayoutGrid, Search, X, Settings2 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -39,6 +39,13 @@ export const KanbanBoard = ({
   const [selectedTask, setSelectedTask] = useState(null);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [groupBy, setGroupBy] = useState("none");
+
+  // "c" keyboard shortcut opens the create dialog
+  useEffect(() => {
+    const open = () => setIsModalOpen(true);
+    window.addEventListener("workzen:create", open);
+    return () => window.removeEventListener("workzen:create", open);
+  }, []);
 
   const columns = columnsOf(project);
   const doneStatus = doneColumnId(columns);

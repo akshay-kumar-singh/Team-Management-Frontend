@@ -2,6 +2,7 @@ import { LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { Avatar } from "../common/TaskIcons";
 import { NotificationBell } from "../notifications/NotificationBell";
+import { GlobalSearch } from "./GlobalSearch";
 
 export const Header = ({ onMenuClick, sidebarOpen }) => {
   const { userData, logout } = useAuth();
@@ -29,8 +30,10 @@ export const Header = ({ onMenuClick, sidebarOpen }) => {
         </div>
       </div>
 
-      {/* Right: bell + avatar + logout */}
+      {/* Right: search + bell + avatar + logout */}
       <div className="flex items-center gap-1.5 sm:gap-2">
+        <GlobalSearch />
+
         <NotificationBell />
 
         <Avatar name={userData?.name} size="md" />

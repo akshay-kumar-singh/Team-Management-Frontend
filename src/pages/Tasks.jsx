@@ -3,11 +3,12 @@ import { TaskAssistant } from "../components/assistant/TaskAssistant";
 import { AgentActivityPanel } from "../components/agent/AgentActivityPanel";
 import { CompleteSprintModal } from "../components/sprints/CompleteSprintModal";
 import { SprintReportModal } from "../components/sprints/SprintReportModal";
+import { ViewTabs } from "../components/common/ViewTabs";
 import { Button } from "../components/common/Button";
 import { useTasks } from "../hooks/useTasks";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { useCallback, useEffect, useState } from "react";
-import { CheckCircle2, ListTodo, Target } from "lucide-react";
+import { CheckCircle2, Target } from "lucide-react";
 import api from "../services/api";
 import toast from "react-hot-toast";
 import { columnsOf, doneColumnId } from "../utils/constants";
@@ -134,7 +135,9 @@ export const Tasks = () => {
 
   return (
     <div className="space-y-6">
-      {/* Sprint banner / backlog link */}
+      <ViewTabs projectId={projectId} />
+
+      {/* Sprint banner */}
       {projectId && (
         <div
           className={`flex flex-wrap items-center gap-3 rounded-lg border px-4 py-2.5 ${
@@ -158,18 +161,10 @@ export const Tasks = () => {
               </Button>
             </>
           ) : (
-            <>
-              <span className="text-sm text-ink-subtle">
-                No active sprint — the board shows your backlog.
-              </span>
-              <div className="flex-1" />
-            </>
+            <span className="text-sm text-ink-subtle">
+              No active sprint — the board shows your backlog.
+            </span>
           )}
-          <Link to={`/backlog?projectId=${projectId}`}>
-            <Button variant="outline">
-              <ListTodo size={14} className="mr-1" /> Backlog
-            </Button>
-          </Link>
         </div>
       )}
 

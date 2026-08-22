@@ -24,6 +24,7 @@ import {
 } from "../components/common/TaskIcons";
 import { AGENT_STATUS_LABELS, columnsOf, doneColumnId } from "../utils/constants";
 import { formatDateTime } from "../utils/helpers";
+import { pushRecent } from "../utils/recentItems";
 
 const fieldClass =
   "w-full px-2.5 py-1.5 bg-white border border-line rounded text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors";
@@ -46,6 +47,12 @@ export const TaskDetail = () => {
       const { data } = await api.get(`/api/tasks/key/${key}`);
       setTask(data);
       setNotFound(false);
+      pushRecent({
+        type: "task",
+        id: data._id,
+        label: `${data.key} · ${data.title}`,
+        to: `/browse/${data.key}`,
+      });
     } catch {
       setNotFound(true);
     } finally {

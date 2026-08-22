@@ -118,9 +118,27 @@ export const AuthProvider = ({ children }) => {
     await signOut(auth);
   };
 
+  // Toggle a project/task favourite and reflect it in userData immediately
+  const toggleStar = async (type, id) => {
+    const { data } = await api.post("/api/users/star", { type, id });
+    setUserData((u) =>
+      u ? { ...u, starredProjects: data.starredProjects, starredTasks: data.starredTasks } : u
+    );
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, userData, loading, login, register, registerFromInvite, logout, refreshUser }}
+      value={{
+        user,
+        userData,
+        loading,
+        login,
+        register,
+        registerFromInvite,
+        logout,
+        refreshUser,
+        toggleStar,
+      }}
     >
       {children}
     </AuthContext.Provider>

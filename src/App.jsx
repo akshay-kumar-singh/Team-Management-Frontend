@@ -13,6 +13,8 @@ import { Dashboard } from "./pages/Dashboard";
 import { Projects } from "./pages/Projects";
 import { Tasks } from "./pages/Tasks";
 import { Backlog } from "./pages/Backlog";
+import { ListView } from "./pages/ListView";
+import { CalendarView } from "./pages/CalendarView";
 import { Chat } from "./pages/Chat";
 import { Team } from "./pages/Team";
 import { TaskDetail } from "./pages/TaskDetail";
@@ -51,6 +53,8 @@ function App() {
               <Route path="projects" element={<Projects />} />
               <Route path="backlog" element={<Backlog />} />
               <Route path="tasks" element={<Tasks />} />
+              <Route path="list" element={<ListView />} />
+              <Route path="calendar" element={<CalendarView />} />
               <Route path="chat" element={<Chat />} />
               <Route path="team" element={<Team />} />
               <Route path="browse/:key" element={<TaskDetail />} />

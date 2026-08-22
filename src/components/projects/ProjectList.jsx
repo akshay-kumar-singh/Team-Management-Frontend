@@ -20,6 +20,12 @@ export const ProjectList = () => {
     userData?.role === USER_ROLES.ADMIN ||
     userData?.role === USER_ROLES.MANAGER;
 
+  // Starred projects float to the top
+  const starred = new Set(userData?.starredProjects || []);
+  const sortedProjects = [...projects].sort(
+    (a, b) => (starred.has(b._id) ? 1 : 0) - (starred.has(a._id) ? 1 : 0)
+  );
+
   const handleSubmit = async (data) => {
     if (selectedProject) {
       await updateProject(selectedProject._id, data);
@@ -65,7 +71,7 @@ export const ProjectList = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {projects.map((project) => (
+        {sortedProjects.map((project) => (
           <ProjectCard
             key={project._id}
             project={project}
