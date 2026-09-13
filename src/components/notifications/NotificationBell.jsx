@@ -16,6 +16,9 @@ export const NotificationBell = () => {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [nextCursor, setNextCursor] = useState(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const { socket } = useSocket();
   const navigate = useNavigate();
 
@@ -24,10 +27,27 @@ export const NotificationBell = () => {
       const { data } = await api.get("/api/notifications");
       setNotifications(data.notifications);
       setUnreadCount(data.unreadCount);
+      setNextCursor(data.nextCursor);
+      setHasMore(data.hasMore);
     } catch (error) {
       console.error("Error fetching notifications:", error);
     }
   }, []);
+
+  const loadMore = async () => {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const { data } = await api.get(`/api/notifications?limit=20&cursor=${nextCursor}`);
+      setNotifications((prev) => [...prev, ...data.notifications]);
+      setNextCursor(data.nextCursor);
+      setHasMore(data.hasMore);
+    } catch (error) {
+      console.error("Error loading more notifications:", error);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   useEffect(() => {
     fetchNotifications();
@@ -37,7 +57,7 @@ export const NotificationBell = () => {
   useEffect(() => {
     if (!socket) return;
     const handleNotification = (notification) => {
-      setNotifications((prev) => [notification, ...prev].slice(0, 30));
+      setNotifications((prev) => [notification, ...prev]);
       setUnreadCount((prev) => prev + 1);
     };
     socket.on("notification", handleNotification);
@@ -144,6 +164,15 @@ export const NotificationBell = () => {
                     </button>
                   );
                 })
+              )}
+              {hasMore && (
+                <button
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  className="w-full text-center text-xs text-brand hover:underline disabled:opacity-50 py-3 border-t border-line"
+                >
+                  {loadingMore ? "Loading…" : "Load older notifications"}
+                </button>
               )}
             </div>
           </div>

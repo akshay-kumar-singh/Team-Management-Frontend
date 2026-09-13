@@ -3,9 +3,13 @@ import api from "../services/api";
 import { useSocket } from "./useSocket";
 import toast from "react-hot-toast";
 
+const PAGE_SIZE = 50;
+
 export const useChat = (teamId) => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingEarlier, setLoadingEarlier] = useState(false);
   const { socket } = useSocket();
 
   const actualTeamId =
@@ -13,21 +17,35 @@ export const useChat = (teamId) => {
 
   const fetchMessages = async () => {
     if (!actualTeamId) {
-      console.log("No teamId provided");
       setLoading(false);
       return;
     }
 
     try {
-      console.log("Fetching messages for team:", actualTeamId);
-      const { data } = await api.get(`/api/messages?teamId=${actualTeamId}`);
-      console.log("Messages fetched:", data.length);
+      const { data } = await api.get(`/api/messages?limit=${PAGE_SIZE}`);
       setMessages(data);
+      setHasMore(data.length === PAGE_SIZE); // a full page means there may be older ones
     } catch (error) {
       console.error("Error fetching messages:", error);
       toast.error(error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // "Load earlier" — fetch the page immediately older than the oldest we hold
+  const loadEarlier = async () => {
+    if (!messages.length || loadingEarlier) return;
+    setLoadingEarlier(true);
+    try {
+      const oldestId = messages[0]._id;
+      const { data } = await api.get(`/api/messages?limit=${PAGE_SIZE}&before=${oldestId}`);
+      if (data.length) setMessages((prev) => [...data, ...prev]);
+      setHasMore(data.length === PAGE_SIZE);
+    } catch (error) {
+      console.error("Error loading earlier messages:", error);
+    } finally {
+      setLoadingEarlier(false);
     }
   };
 
@@ -94,5 +112,5 @@ export const useChat = (teamId) => {
     }
   }, [socket, actualTeamId]);
 
-  return { messages, loading, sendMessage, fetchMessages };
+  return { messages, loading, sendMessage, fetchMessages, hasMore, loadEarlier, loadingEarlier };
 };

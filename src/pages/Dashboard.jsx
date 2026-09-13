@@ -79,7 +79,6 @@ export const Dashboard = () => {
     fetchStats();
     fetchDeadlines();
     fetchActivity();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userData?._id]);
 
   const fetchActivity = async () => {
@@ -93,28 +92,10 @@ export const Dashboard = () => {
 
   const fetchStats = async () => {
     try {
-      const [projectsRes, membersRes] = await Promise.all([
-        api.get("/api/projects"),
-        api.get("/api/users/team"),
-      ]);
-      const projects = projectsRes.data;
-      let totalTasks = 0;
-      const mine = [];
-      if (projects.length > 0) {
-        const responses = await Promise.allSettled(
-          projects.map((p) => api.get(`/api/tasks?projectId=${p._id}`))
-        );
-        responses.forEach((res) => {
-          if (res.status === "fulfilled") {
-            res.value.data.forEach((t) => {
-              if (t.status !== "done") totalTasks += 1;
-              if ((t.assignedTo?._id || t.assignedTo) === userData?._id && t.status !== "done") mine.push(t);
-            });
-          }
-        });
-      }
-      setStats({ projects: projects.length, tasks: totalTasks, members: membersRes.data.length });
-      setMyIssues(mine.slice(0, 8));
+      // One aggregated call (server-side) replaces the old per-project N+1
+      const { data } = await api.get("/api/stats/overview");
+      setStats({ projects: data.projects, tasks: data.activeIssues, members: data.members });
+      setMyIssues(data.assignedToMe);
     } catch (e) {
       console.error(e);
     }

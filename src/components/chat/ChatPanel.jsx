@@ -6,7 +6,9 @@ import { MessageSquare, Hash } from "lucide-react";
 
 export const ChatPanel = () => {
   const { userData } = useAuth();
-  const { messages, loading, sendMessage } = useChat(userData?.teamId);
+  const { messages, loading, sendMessage, hasMore, loadEarlier, loadingEarlier } = useChat(
+    userData?.teamId
+  );
 
   const handleSend = async (content) => {
     await sendMessage(content);
@@ -42,7 +44,12 @@ export const ChatPanel = () => {
       </div>
 
       {/* Messages */}
-      <MessageList messages={messages} />
+      <MessageList
+        messages={messages}
+        hasMore={hasMore}
+        onLoadEarlier={loadEarlier}
+        loadingEarlier={loadingEarlier}
+      />
 
       {/* Input */}
       <MessageInput onSend={handleSend} />
