@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { DragDropContext } from "@hello-pangea/dnd";
-import { Plus, LayoutGrid, Search, X, Settings2 } from "lucide-react";
+import { Plus, LayoutGrid, Search, X, Settings2, Zap, SlidersHorizontal, UserX, Sparkles } from "lucide-react";
 import toast from "react-hot-toast";
 import { useSearchParams } from "react-router-dom";
+import { Avatar } from "../common/TaskIcons";
 import { Column } from "./Column";
 import { TaskModal } from "./TaskModal";
 import { BoardSettingsModal } from "./BoardSettingsModal";
+import { AutomationsModal } from "./AutomationsModal";
+import { CustomFieldsModal } from "./CustomFieldsModal";
 import { Button } from "../common/Button";
 import api from "../../services/api";
 import { useAuth } from "../../hooks/useAuth";
@@ -28,6 +31,7 @@ export const KanbanBoard = ({
   reorderColumn,
   fetchTasks,
   onProjectUpdated,
+  onOpenAssistant,
 }) => {
   const [searchParams] = useSearchParams();
   const projectId = searchParams.get("projectId");
@@ -36,6 +40,8 @@ export const KanbanBoard = ({
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isAutomationsOpen, setIsAutomationsOpen] = useState(false);
+  const [isFieldsOpen, setIsFieldsOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [groupBy, setGroupBy] = useState("none");
@@ -164,7 +170,8 @@ export const KanbanBoard = ({
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this task?")) await deleteTask(id);
+    if (window.confirm("Archive this issue? It leaves the board but you can restore it from List → Archived."))
+      await deleteTask(id);
   };
 
   const handleSaveBoard = async (config) => {
@@ -220,10 +227,21 @@ export const KanbanBoard = ({
         </div>
         <div className="flex items-center gap-2">
           {canManageBoard && (
-            <Button variant="secondary" onClick={() => setIsSettingsOpen(true)}>
-              <Settings2 size={15} className="mr-1" /> Board
-            </Button>
+            <>
+              <Button variant="secondary" onClick={() => setIsFieldsOpen(true)}>
+                <SlidersHorizontal size={15} className="mr-1" /> Fields
+              </Button>
+              <Button variant="secondary" onClick={() => setIsAutomationsOpen(true)}>
+                <Zap size={15} className="mr-1" /> Automations
+              </Button>
+              <Button variant="secondary" onClick={() => setIsSettingsOpen(true)}>
+                <Settings2 size={15} className="mr-1" /> Board
+              </Button>
+            </>
           )}
+          <Button variant="secondary" onClick={() => onOpenAssistant?.()}>
+            <Sparkles size={15} className="mr-1" /> AI Assistant
+          </Button>
           <Button onClick={() => setIsModalOpen(true)}>
             <Plus size={16} className="mr-1" /> Create
           </Button>
@@ -242,13 +260,33 @@ export const KanbanBoard = ({
           />
         </div>
 
-        <select value={filters.assignee} onChange={(e) => setFilters({ ...filters, assignee: e.target.value })} className={selectClass}>
-          <option value="">Assignee</option>
-          <option value="unassigned">Unassigned</option>
-          {assigneeOptions.map(([id, name]) => (
-            <option key={id} value={id}>{name}</option>
-          ))}
-        </select>
+        {/* Jira-style person filter: click an avatar to filter by assignee */}
+        {assigneeOptions.length > 0 && (
+          <div className="flex items-center gap-1" title="Filter by assignee">
+            {assigneeOptions.map(([id, name]) => {
+              const active = filters.assignee === id;
+              return (
+                <button
+                  key={id}
+                  onClick={() => setFilters({ ...filters, assignee: active ? "" : id })}
+                  title={name}
+                  className={`rounded-full transition-all ${active ? "ring-2 ring-brand" : "opacity-60 hover:opacity-100"}`}
+                >
+                  <Avatar name={name} size="sm" />
+                </button>
+              );
+            })}
+            <button
+              onClick={() => setFilters({ ...filters, assignee: filters.assignee === "unassigned" ? "" : "unassigned" })}
+              title="Unassigned"
+              className={`w-7 h-7 rounded-full border border-dashed flex items-center justify-center text-ink-subtle transition-all ${
+                filters.assignee === "unassigned" ? "ring-2 ring-brand border-brand" : "border-line hover:text-ink"
+              }`}
+            >
+              <UserX size={13} />
+            </button>
+          </div>
+        )}
 
         {labelOptions.length > 0 && (
           <select value={filters.label} onChange={(e) => setFilters({ ...filters, label: e.target.value })} className={selectClass}>
@@ -336,6 +374,19 @@ export const KanbanBoard = ({
         onClose={() => setIsSettingsOpen(false)}
         project={project}
         onSave={handleSaveBoard}
+      />
+
+      <AutomationsModal
+        isOpen={isAutomationsOpen}
+        onClose={() => setIsAutomationsOpen(false)}
+        project={project}
+      />
+
+      <CustomFieldsModal
+        isOpen={isFieldsOpen}
+        onClose={() => setIsFieldsOpen(false)}
+        project={project}
+        onSaved={onProjectUpdated}
       />
     </div>
   );

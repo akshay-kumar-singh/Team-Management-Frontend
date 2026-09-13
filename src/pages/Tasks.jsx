@@ -1,6 +1,5 @@
 import { KanbanBoard } from "../components/tasks/KanbanBoard";
-import { TaskAssistant } from "../components/assistant/TaskAssistant";
-import { AgentActivityPanel } from "../components/agent/AgentActivityPanel";
+import { AIDrawer } from "../components/assistant/AIDrawer";
 import { CompleteSprintModal } from "../components/sprints/CompleteSprintModal";
 import { SprintReportModal } from "../components/sprints/SprintReportModal";
 import { ViewTabs } from "../components/common/ViewTabs";
@@ -23,6 +22,7 @@ export const Tasks = () => {
   const [sprints, setSprints] = useState([]);
   const [completing, setCompleting] = useState(false);
   const [reportSprint, setReportSprint] = useState(null);
+  const [aiOpen, setAiOpen] = useState(false);
 
   // Board config (columns / transitions) lives on the project
   const fetchProject = useCallback(async () => {
@@ -178,13 +178,19 @@ export const Tasks = () => {
         reorderColumn={reorderColumn}
         fetchTasks={fetchTasks}
         onProjectUpdated={setProject}
+        onOpenAssistant={() => setAiOpen(true)}
       />
 
-      {/* AI Panels - side by side on large screens, stacked on mobile */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <TaskAssistant onTaskAction={handleTaskAction} tasks={tasks} />
-        <AgentActivityPanel />
-      </div>
+      {/* AI tools live in a right-side drawer (opened from the board header) so
+          the board page stays clean, Jira-style. */}
+      <AIDrawer
+        isOpen={aiOpen}
+        onClose={() => setAiOpen(false)}
+        tasks={tasks}
+        onTaskAction={handleTaskAction}
+        projectId={projectId}
+        onImported={fetchTasks}
+      />
 
       <CompleteSprintModal
         isOpen={completing}

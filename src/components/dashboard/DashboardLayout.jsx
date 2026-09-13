@@ -5,14 +5,36 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../hooks/useAuth";
 
 export const DashboardLayout = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Sidebar collapse works on every screen size (Jira-style). The choice is
+  // remembered on desktop; on phones it starts collapsed and shows as an overlay.
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 1024) return false;
+    try {
+      const s = localStorage.getItem("workzen:sidebarOpen");
+      return s === null ? true : s === "true";
+    } catch {
+      return true;
+    }
+  });
   const location = useLocation();
   const { userData } = useAuth();
   const suspended = userData?.teamId?.status === "suspended";
 
-  // Close sidebar on route change (mobile nav click)
+  // Explicit toggle (hamburger) — remembers the desktop preference
+  const toggleSidebar = () =>
+    setSidebarOpen((v) => {
+      const next = !v;
+      try {
+        localStorage.setItem("workzen:sidebarOpen", String(next));
+      } catch {
+        /* private mode — preference just won't persist */
+      }
+      return next;
+    });
+
+  // On phones, close the overlay after navigating (don't touch desktop preference)
   useEffect(() => {
-    setSidebarOpen(false);
+    if (window.innerWidth < 1024) setSidebarOpen(false);
   }, [location.pathname]);
 
   // Global keyboard shortcuts: "/" focuses search, "c" opens the create dialog.
@@ -48,21 +70,22 @@ export const DashboardLayout = () => {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar — slides fully out of view (both mobile and desktop) when collapsed */}
       <div
         className={`fixed inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <Sidebar />
       </div>
 
-      {/* Main content area */}
-      <div className="flex-1 flex flex-col min-w-0 lg:ml-64">
-        <Header
-          onMenuClick={() => setSidebarOpen(!sidebarOpen)}
-          sidebarOpen={sidebarOpen}
-        />
+      {/* Main content area — reflows to fill the space when the sidebar is collapsed */}
+      <div
+        className={`flex-1 flex flex-col min-w-0 transition-[margin] duration-300 ${
+          sidebarOpen ? "lg:ml-64" : "ml-0"
+        }`}
+      >
+        <Header onMenuClick={toggleSidebar} sidebarOpen={sidebarOpen} />
         {suspended && (
           <div className="bg-warn-tint border-b border-line text-warn text-sm font-medium px-4 py-2 text-center">
             This workspace is suspended — everything is read-only. Contact

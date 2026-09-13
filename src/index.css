@@ -68,3 +68,43 @@ body {
 .scrollbar-track-transparent::-webkit-scrollbar-track {
   background-color: transparent;
 }
+
+/* ── Dark theme (Phase 10) ──
+   Redefine the design tokens under a higher-specificity selector so every
+   Tailwind utility built on var(--color-*) re-themes at runtime, then remap the
+   handful of hardcoded neutrals a light-first app leans on. `text-white` is
+   left alone so brand buttons keep readable labels. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-brand-tint: #1c2b45;
+  --color-canvas: #0f141c;
+  --color-column: #161c26;
+  --color-line: #2a3340;
+  --color-ink: #e6e8ec;
+  --color-ink-subtle: #9aa5b4;
+  --color-success-tint: #123024;
+  --color-danger-tint: #3a1d1a;
+  --color-warn-tint: #362c12;
+}
+
+[data-theme="dark"] body {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+}
+
+/* Neutral surfaces */
+[data-theme="dark"] .bg-white { background-color: #161c26 !important; }
+[data-theme="dark"] .bg-gray-50 { background-color: #1a212c !important; }
+[data-theme="dark"] .bg-gray-100 { background-color: #222b38 !important; }
+[data-theme="dark"] .bg-gray-200 { background-color: #2c3644 !important; }
+[data-theme="dark"] .hover\:bg-gray-50:hover { background-color: #1a212c !important; }
+[data-theme="dark"] .hover\:bg-gray-100:hover { background-color: #222b38 !important; }
+[data-theme="dark"] .border-gray-200 { border-color: #2a3340 !important; }
+[data-theme="dark"] .divide-gray-200 > * { border-color: #2a3340 !important; }
+
+/* Neutral text */
+[data-theme="dark"] .text-gray-400 { color: #7b8794 !important; }
+[data-theme="dark"] .text-gray-500 { color: #8b97a6 !important; }
+[data-theme="dark"] .text-gray-600 { color: #9aa5b4 !important; }
+[data-theme="dark"] .text-gray-700 { color: #c3cad4 !important; }
+[data-theme="dark"] .placeholder-gray-400::placeholder { color: #6b7684 !important; }

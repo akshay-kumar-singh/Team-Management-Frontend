@@ -6,13 +6,15 @@ import {
   CheckSquare,
   MessageSquare,
   Users,
+  BarChart3,
+  Settings,
   Zap,
   LogOut,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 
 export const Sidebar = () => {
-  const { logout } = useAuth();
+  const { logout, userData } = useAuth();
   const navigate = useNavigate();
 
   const links = [
@@ -20,8 +22,13 @@ export const Sidebar = () => {
     { path: "/projects", icon: Folder, label: "Projects" },
     { path: "/backlog", icon: ListTodo, label: "Backlog" },
     { path: "/tasks", icon: CheckSquare, label: "Board" },
+    { path: "/reports", icon: BarChart3, label: "Reports" },
     { path: "/chat", icon: MessageSquare, label: "Chat" },
     { path: "/team", icon: Users, label: "Team" },
+    // Org settings is admin-only
+    ...(userData?.role === "ADMIN"
+      ? [{ path: "/settings", icon: Settings, label: "Settings" }]
+      : []),
   ];
 
   const handleLogout = async () => {

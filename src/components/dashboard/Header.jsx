@@ -3,6 +3,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { Avatar } from "../common/TaskIcons";
 import { NotificationBell } from "../notifications/NotificationBell";
 import { GlobalSearch } from "./GlobalSearch";
+import { ThemeToggle } from "../common/ThemeToggle";
 
 export const Header = ({ onMenuClick, sidebarOpen }) => {
   const { userData, logout } = useAuth();
@@ -13,8 +14,9 @@ export const Header = ({ onMenuClick, sidebarOpen }) => {
       <div className="flex items-center gap-3">
         <button
           onClick={onMenuClick}
-          className="lg:hidden p-2 text-ink-subtle hover:bg-gray-100 rounded transition-colors"
+          className="p-2 text-ink-subtle hover:bg-gray-100 rounded transition-colors"
           aria-label="Toggle sidebar"
+          title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
         >
           {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
         </button>
@@ -33,6 +35,8 @@ export const Header = ({ onMenuClick, sidebarOpen }) => {
       {/* Right: search + bell + avatar + logout */}
       <div className="flex items-center gap-1.5 sm:gap-2">
         <GlobalSearch />
+
+        <ThemeToggle />
 
         <NotificationBell />
 

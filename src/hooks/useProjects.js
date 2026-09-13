@@ -73,7 +73,7 @@ export const useProjects = () => {
     try {
       await api.delete(`/api/projects/${id}`);
       setProjects(projects.filter((p) => p._id !== id));
-      toast.success("Project deleted successfully");
+      toast.success("Project archived");
     } catch (error) {
       toast.error(error.message);
       throw error;

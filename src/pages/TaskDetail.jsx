@@ -7,13 +7,22 @@ import {
   Bot,
   ChevronRight,
   Pencil,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import api from "../services/api";
+import { useAuth } from "../hooks/useAuth";
 import toast from "react-hot-toast";
 import { Button } from "../components/common/Button";
 import { TaskModal } from "../components/tasks/TaskModal";
 import { TaskChildren } from "../components/tasks/TaskChildren";
 import { TaskActivitySection } from "../components/tasks/TaskActivitySection";
+import { TimeTrackingPanel } from "../components/tasks/TimeTrackingPanel";
+import { AttachmentsPanel } from "../components/tasks/AttachmentsPanel";
+import { IssueLinksPanel } from "../components/tasks/IssueLinksPanel";
+import { ApprovalsPanel } from "../components/tasks/ApprovalsPanel";
+import { CustomFieldValues } from "../components/tasks/CustomFieldValues";
+import { MarkdownContent } from "../components/common/MarkdownContent";
 import {
   TypeIcon,
   PriorityIcon,
@@ -34,6 +43,7 @@ const toDateInput = (d) => (d ? String(d).slice(0, 10) : "");
 export const TaskDetail = () => {
   const { key } = useParams();
   const navigate = useNavigate();
+  const { userData } = useAuth();
   const [task, setTask] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -104,6 +114,15 @@ export const TaskDetail = () => {
     }
   };
 
+  const toggleWatch = async () => {
+    try {
+      await api.post(`/api/tasks/${task._id}/watch`);
+      await fetchTask();
+    } catch {
+      toast.error("Could not update watch");
+    }
+  };
+
   const copyLink = () => {
     navigator.clipboard.writeText(window.location.href);
     toast.success("Link copied to clipboard");
@@ -134,6 +153,9 @@ export const TaskDetail = () => {
   const agentStatus = task.agentJobId?.status;
   const columns = columnsOf(task.projectId);
   const doneStatus = doneColumnId(columns);
+  const watching = (task.watchers || []).some((w) => (w._id || w) === userData?._id);
+  const watcherCount = (task.watchers || []).length;
+  const RESOLUTION_LABELS = { done: "Done", wontdo: "Won't Do", duplicate: "Duplicate" };
   const statusName = columns.find((c) => c.id === task.status)?.name;
 
   return (
@@ -168,6 +190,18 @@ export const TaskDetail = () => {
               </div>
               <div className="flex items-center gap-1">
                 <button
+                  onClick={toggleWatch}
+                  title={watching ? "Stop watching" : "Watch"}
+                  className={`flex items-center gap-1 px-2 py-1.5 rounded text-xs font-medium transition-colors ${
+                    watching
+                      ? "bg-brand-tint text-brand"
+                      : "hover:bg-gray-100 text-ink-subtle"
+                  }`}
+                >
+                  {watching ? <Eye size={14} /> : <EyeOff size={14} />}
+                  {watcherCount > 0 && <span>{watcherCount}</span>}
+                </button>
+                <button
                   onClick={copyLink}
                   title="Copy link"
                   className="p-1.5 hover:bg-gray-100 rounded text-ink-subtle transition-colors"
@@ -191,9 +225,22 @@ export const TaskDetail = () => {
               </div>
             </div>
 
-            <h1 className="text-xl font-semibold text-ink mb-4 leading-snug">
-              {task.title}
-            </h1>
+            <div className="flex items-start gap-2 mb-4">
+              <h1 className="text-xl font-semibold text-ink leading-snug flex-1">
+                {task.title}
+              </h1>
+              {task.resolution && (
+                <span
+                  className={`mt-1 flex-shrink-0 px-2 py-0.5 text-[10px] font-bold tracking-wide rounded ${
+                    task.resolution === "done"
+                      ? "bg-success-tint text-success"
+                      : "bg-gray-100 text-ink-subtle"
+                  }`}
+                >
+                  {RESOLUTION_LABELS[task.resolution]?.toUpperCase()}
+                </span>
+              )}
+            </div>
 
             {/* Description */}
             <div className="mb-5">
@@ -201,9 +248,7 @@ export const TaskDetail = () => {
                 Description
               </h3>
               {task.description ? (
-                <p className="text-sm text-ink whitespace-pre-line leading-relaxed">
-                  {task.description}
-                </p>
+                <MarkdownContent content={task.description} />
               ) : (
                 <p className="text-sm text-ink-subtle italic">
                   No description added.
@@ -217,9 +262,7 @@ export const TaskDetail = () => {
                 <h3 className="text-xs font-bold text-ink-subtle uppercase tracking-wide mb-2">
                   Acceptance criteria
                 </h3>
-                <p className="text-sm text-ink whitespace-pre-line leading-relaxed">
-                  {task.acceptanceCriteria}
-                </p>
+                <MarkdownContent content={task.acceptanceCriteria} />
               </div>
             )}
           </div>
@@ -255,6 +298,20 @@ export const TaskDetail = () => {
               )}
             </div>
           )}
+
+          {/* Approvals */}
+          <ApprovalsPanel
+            taskId={task._id}
+            approvals={task.approvals}
+            teamMembers={teamMembers}
+            onChanged={fetchTask}
+          />
+
+          {/* Linked issues */}
+          <IssueLinksPanel taskId={task._id} />
+
+          {/* Attachments */}
+          <AttachmentsPanel taskId={task._id} />
 
           {/* Subtasks / epic child issues */}
           <TaskChildren task={task} columns={columns} onChanged={fetchTask} />
@@ -293,6 +350,23 @@ export const TaskDetail = () => {
                 </select>
                 <StatusLozenge status={task.status} label={statusName} />
               </div>
+            </div>
+
+            {/* Resolution */}
+            <div>
+              <label className="block text-xs font-semibold text-ink-subtle mb-1.5">
+                Resolution
+              </label>
+              <select
+                value={task.resolution || ""}
+                onChange={(e) => save({ resolution: e.target.value })}
+                className={fieldClass}
+              >
+                <option value="">Unresolved</option>
+                <option value="done">Done</option>
+                <option value="wontdo">Won't Do</option>
+                <option value="duplicate">Duplicate</option>
+              </select>
             </div>
 
             {/* Assignee */}
@@ -370,6 +444,9 @@ export const TaskDetail = () => {
                 className={fieldClass}
               />
             </div>
+
+            {/* Time tracking */}
+            <TimeTrackingPanel task={task} onChanged={fetchTask} />
 
             {/* Epic link (not shown for epics themselves) */}
             {task.type !== "epic" && (
@@ -468,6 +545,13 @@ export const TaskDetail = () => {
                 </div>
               )}
             </div>
+
+            {/* Project custom fields */}
+            <CustomFieldValues
+              fields={task.projectId?.customFields || []}
+              values={task.customValues || {}}
+              onSave={(customValues) => save({ customValues })}
+            />
 
             {/* Timestamps */}
             <div className="pt-3 border-t border-line space-y-1">

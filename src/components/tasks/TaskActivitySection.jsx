@@ -1,37 +1,15 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Send, Trash2, Bot } from "lucide-react";
+import { Send, Trash2, Bot, Paperclip } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import api from "../../services/api";
 import toast from "react-hot-toast";
 import { useAuth } from "../../hooks/useAuth";
 import { Avatar } from "../common/TaskIcons";
+import { MarkdownContent } from "../common/MarkdownContent";
+import { MarkdownToolbar } from "../common/MarkdownToolbar";
 
-const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-// Highlight @Name occurrences for users actually mentioned in the comment
-const CommentContent = ({ content, mentions = [] }) => {
-  if (mentions.length === 0) {
-    return <p className="text-sm text-ink whitespace-pre-line leading-relaxed">{content}</p>;
-  }
-  const pattern = new RegExp(
-    `(${mentions.map((m) => `@${escapeRegex(m.name)}`).join("|")})`,
-    "g"
-  );
-  const parts = content.split(pattern);
-  return (
-    <p className="text-sm text-ink whitespace-pre-line leading-relaxed">
-      {parts.map((part, i) =>
-        part.startsWith("@") && mentions.some((m) => `@${m.name}` === part) ? (
-          <span key={i} className="text-brand font-medium bg-brand-tint rounded px-0.5">
-            {part}
-          </span>
-        ) : (
-          part
-        )
-      )}
-    </p>
-  );
-};
+// Comments render as markdown; @mentions still notify but appear inline as text
+const CommentContent = ({ content }) => <MarkdownContent content={content} />;
 
 // Human sentence for a changelog entry
 const activitySentence = (a) => {
@@ -61,6 +39,39 @@ export const TaskActivitySection = ({ taskId, teamMembers = [], refreshToken }) 
   const [mentionQuery, setMentionQuery] = useState(null); // null = closed
   const [pickedMentions, setPickedMentions] = useState([]); // [{_id, name}]
   const textareaRef = useRef(null);
+  const fileRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
+
+  // Attach a file to the issue and drop a markdown reference into the comment —
+  // images embed inline, other files render as a download link.
+  const attachToComment = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File is larger than 10 MB");
+      return;
+    }
+    const form = new FormData();
+    form.append("file", file);
+    setUploading(true);
+    try {
+      const { data } = await api.post(`/api/tasks/${taskId}/attachments`, form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const md = data.resourceType === "image" ? `\n![${data.filename}](${data.url})\n` : `\n[${data.filename}](${data.url})\n`;
+      setInput((prev) => prev + md);
+      toast.success("Attached");
+    } catch (err) {
+      toast.error(
+        err?.response?.data?.code === "UPLOADS_DISABLED"
+          ? "File uploads aren't configured on this server"
+          : "Upload failed"
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const fetchComments = useCallback(async () => {
     try {
@@ -197,15 +208,26 @@ export const TaskActivitySection = ({ taskId, teamMembers = [], refreshToken }) 
               </div>
             )}
 
+            <MarkdownToolbar textareaRef={textareaRef} value={input} onChange={setInput} />
             <div className="flex gap-2 items-end">
               <textarea
                 ref={textareaRef}
                 value={input}
                 onChange={handleInputChange}
-                placeholder="Add a comment... (type @ to mention)"
+                placeholder="Add a comment... (markdown & @mention supported)"
                 rows={2}
-                className="flex-1 px-3 py-2 bg-white border border-line rounded text-sm text-ink placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand resize-none"
+                className="flex-1 px-3 py-2 bg-white border border-line rounded-b rounded-tr text-sm text-ink placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand resize-none"
               />
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={uploading}
+                className="p-2.5 rounded border border-line text-ink-subtle hover:bg-gray-100 transition-colors disabled:opacity-50"
+                title="Attach a file or image"
+              >
+                <Paperclip size={15} />
+              </button>
+              <input ref={fileRef} type="file" className="hidden" onChange={attachToComment} />
               <button
                 type="submit"
                 disabled={!input.trim() || sending}

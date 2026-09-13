@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Bot, Send, Loader } from "lucide-react";
+import { Bot, Send, Loader, FileText, Upload } from "lucide-react";
 import api from "../../services/api";
 
 // The LLM call happens server-side (/api/agent/assistant) so the
@@ -19,9 +19,11 @@ const callAssistant = async (userMessage, tasks) => {
   return data.commands;
 };
 // ── Component ──
-export const TaskAssistant = ({ onTaskAction, tasks = [] }) => {
+export const TaskAssistant = ({ onTaskAction, tasks = [], projectId, onImported }) => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const fileRef = useRef(null);
   const messagesEndRef = useRef(null);
 
   const [messages, setMessages] = useState([
@@ -159,6 +161,60 @@ Just tell me what you want to do! 🚀`,
     }
   };
 
+  const handlePrdUpload = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-uploading the same file
+    if (!file || importing) return;
+    if (!projectId) {
+      setMessages((prev) => [
+        ...prev,
+        { type: "bot", text: "⚠️ Open a project first, then upload the PRD there." },
+      ]);
+      return;
+    }
+
+    setImporting(true);
+    setMessages((prev) => [
+      ...prev,
+      { type: "user", text: `📄 Uploaded PRD: ${file.name}` },
+      { type: "bot", text: "Reading your PRD and breaking it into tickets… this usually takes ~10-20s." },
+    ]);
+    setTimeout(scrollToBottom, 100);
+
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("projectId", projectId);
+      const { data } = await api.post("/api/agent/prd", form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      const lines = [`✅ Created ${data.createdCount} item(s) from your PRD.`];
+      if (data.summary) lines.push(`\n📋 ${data.summary}`);
+      if (data.epics?.length)
+        lines.push(`\nEpics:\n${data.epics.map((x) => `• ${x.key} — ${x.title}`).join("\n")}`);
+      if (data.issues?.length)
+        lines.push(
+          `\nIssues:\n${data.issues
+            .map((x) => `• ${x.key} — ${x.title}${x.assignee ? `  →  ${x.assignee}` : ""}`)
+            .join("\n")}`
+        );
+      if (data.assignedDevs?.length)
+        lines.push(`\n👥 Assigned: ${data.assignedDevs.map((d) => `${d.name} (${d.count})`).join(", ")}`);
+
+      setMessages((prev) => [...prev, { type: "bot", text: lines.join("\n") }]);
+      onImported?.();
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        { type: "bot", text: `❌ ${err.message || "PRD import failed. Please try again."}` },
+      ]);
+    } finally {
+      setImporting(false);
+      setTimeout(scrollToBottom, 100);
+    }
+  };
+
   return (
     <div className="bg-white rounded-lg border border-line p-5">
       {/* Header */}
@@ -175,6 +231,43 @@ Just tell me what you want to do! 🚀`,
             {isLoading ? "⚙️ Thinking..." : "Powered by Workzen ✨"}
           </p>
         </div>
+      </div>
+
+      {/* PRD → tickets */}
+      <div className="mb-4 rounded border border-dashed border-line bg-canvas p-3">
+        <div className="flex items-center gap-1.5 mb-1">
+          <FileText size={14} className="text-brand" />
+          <span className="text-xs font-semibold text-ink">Generate tickets from a PRD</span>
+        </div>
+        <p className="text-[11px] text-ink-subtle mb-2 leading-relaxed">
+          Upload a PRD (PDF, DOCX or .md). I'll create the epics &amp; issues and assign them to the
+          developers named in it.
+        </p>
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".pdf,.docx,.md,.markdown,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown"
+          className="hidden"
+          onChange={handlePrdUpload}
+        />
+        <button
+          onClick={() => fileRef.current?.click()}
+          disabled={importing || !projectId}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium bg-brand text-white hover:bg-brand-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {importing ? (
+            <>
+              <Loader size={13} className="animate-spin" /> Reading PRD…
+            </>
+          ) : (
+            <>
+              <Upload size={13} /> Upload PRD
+            </>
+          )}
+        </button>
+        {!projectId && (
+          <span className="ml-2 text-[11px] text-ink-subtle">Open a project first</span>
+        )}
       </div>
 
       {/* Messages */}

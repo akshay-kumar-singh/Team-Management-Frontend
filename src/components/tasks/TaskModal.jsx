@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Modal } from "../common/Modal";
 import { Button } from "../common/Button";
 import { LabelChip } from "../common/TaskIcons";
+import { MarkdownEditor } from "../common/MarkdownEditor";
 import {
   TASK_STATUS,
   TASK_PRIORITY,
@@ -280,14 +281,11 @@ export const TaskModal = ({
         {/* Description */}
         <div>
           <label className={labelClass}>Description</label>
-          <textarea
+          <MarkdownEditor
             value={formData.description}
-            onChange={(e) =>
-              setFormData({ ...formData, description: e.target.value })
-            }
-            placeholder="Add a description..."
-            className={`${fieldClass} resize-none`}
-            rows="3"
+            onChange={(v) => setFormData({ ...formData, description: v })}
+            placeholder="Add a description… (markdown supported)"
+            rows={4}
           />
         </div>
 

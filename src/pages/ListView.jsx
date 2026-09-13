@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Search, X, ArrowUp, ArrowDown, Save, Star, Trash2 } from "lucide-react";
+import { Search, X, ArrowUp, ArrowDown, Save, Star, Trash2, Download, Upload, Archive, RotateCcw } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../services/api";
+import { useAuth } from "../hooks/useAuth";
 import { ViewTabs } from "../components/common/ViewTabs";
 import { TypeIcon, PriorityIcon, StatusLozenge, Avatar, StoryPoints } from "../components/common/TaskIcons";
 import { columnsOf } from "../utils/constants";
@@ -26,6 +27,12 @@ export const ListView = () => {
   const [filters, setFilters] = useState(EMPTY);
   const [sort, setSort] = useState({ field: "key", dir: "asc" });
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState(() => new Set());
+  const [showArchived, setShowArchived] = useState(false);
+  const [archived, setArchived] = useState([]);
+  const importRef = useRef(null);
+  const { userData } = useAuth();
+  const canManage = userData?.role === "ADMIN" || userData?.role === "MANAGER";
 
   const load = useCallback(async () => {
     if (!projectId) return;
@@ -52,6 +59,96 @@ export const ListView = () => {
   useEffect(() => {
     load();
   }, [load]);
+
+  // ── Multi-select + bulk edit ──
+  const toggleSelect = (id) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  const toggleAll = (ids) =>
+    setSelected((prev) => (ids.every((id) => prev.has(id)) ? new Set() : new Set(ids)));
+  const clearSelection = () => setSelected(new Set());
+
+  const applyBulk = async (updates) => {
+    const ids = [...selected];
+    if (ids.length === 0) return;
+    try {
+      const { data } = await api.patch("/api/tasks/bulk", { ids, updates });
+      toast.success(`Updated ${data.modified} issue${data.modified === 1 ? "" : "s"}`);
+      clearSelection();
+      load();
+    } catch (e) {
+      toast.error(e?.response?.data?.message || "Bulk update failed");
+    }
+  };
+
+  // ── CSV export / import ──
+  const exportCsv = async () => {
+    try {
+      const res = await api.get(`/api/tasks/export?projectId=${projectId}`, { responseType: "blob" });
+      const url = URL.createObjectURL(new Blob([res.data], { type: "text/csv" }));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${project?.key || "issues"}-export.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error("Export failed");
+    }
+  };
+
+  const importCsv = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    const csv = await file.text();
+    try {
+      const { data } = await api.post(`/api/projects/${projectId}/import`, { csv });
+      toast.success(
+        `Imported ${data.created} issue${data.created === 1 ? "" : "s"}` +
+          (data.errors?.length ? ` · ${data.errors.length} row(s) skipped` : "")
+      );
+      load();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Import failed");
+    }
+  };
+
+  // ── Archived issues bin ──
+  const toggleArchived = async () => {
+    const next = !showArchived;
+    setShowArchived(next);
+    if (next) {
+      try {
+        const { data } = await api.get(`/api/tasks?projectId=${projectId}&archived=true`);
+        setArchived(data);
+      } catch {
+        toast.error("Could not load archived issues");
+      }
+    }
+  };
+  const restoreTask = async (t) => {
+    try {
+      await api.post(`/api/tasks/${t._id}/restore`);
+      setArchived((prev) => prev.filter((x) => x._id !== t._id));
+      load();
+      toast.success("Issue restored");
+    } catch {
+      toast.error("Could not restore");
+    }
+  };
+  const purgeTask = async (t) => {
+    if (!window.confirm(`Permanently delete ${t.key}? This cannot be undone.`)) return;
+    try {
+      await api.delete(`/api/tasks/${t._id}/purge`);
+      setArchived((prev) => prev.filter((x) => x._id !== t._id));
+      toast.success("Issue permanently deleted");
+    } catch {
+      toast.error("Could not delete");
+    }
+  };
 
   const columns = columnsOf(project);
   const statusName = (id) => columns.find((c) => c.id === id)?.name || id;
@@ -159,11 +256,79 @@ export const ListView = () => {
     <div>
       <ViewTabs projectId={projectId} />
 
-      <div className="flex justify-between items-center mb-3">
+      <div className="flex flex-wrap justify-between items-center gap-2 mb-3">
         <h1 className="text-xl font-semibold text-ink">
           List <span className="text-sm font-normal text-ink-subtle">· {sorted.length} issues</span>
         </h1>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleArchived}
+            className={`flex items-center gap-1.5 text-xs border rounded px-2.5 py-1.5 transition-colors ${
+              showArchived ? "border-brand text-brand bg-brand-tint" : "border-line text-ink-subtle hover:bg-gray-50"
+            }`}
+          >
+            <Archive size={14} /> Archived
+          </button>
+          <button
+            onClick={exportCsv}
+            className="flex items-center gap-1.5 text-xs border border-line rounded px-2.5 py-1.5 text-ink-subtle hover:bg-gray-50"
+          >
+            <Download size={14} /> Export CSV
+          </button>
+          {canManage && (
+            <>
+              <button
+                onClick={() => importRef.current?.click()}
+                className="flex items-center gap-1.5 text-xs border border-line rounded px-2.5 py-1.5 text-ink-subtle hover:bg-gray-50"
+              >
+                <Upload size={14} /> Import CSV
+              </button>
+              <input ref={importRef} type="file" accept=".csv,text/csv" className="hidden" onChange={importCsv} />
+            </>
+          )}
+        </div>
       </div>
+
+      {/* Bulk action bar */}
+      {selected.size > 0 && (
+        <div className="flex flex-wrap items-center gap-2 mb-3 bg-brand-tint border border-brand/30 rounded-lg px-3 py-2">
+          <span className="text-xs font-semibold text-brand">{selected.size} selected</span>
+          <select
+            defaultValue=""
+            onChange={(e) => e.target.value && applyBulk({ status: e.target.value })}
+            className={selectClass}
+          >
+            <option value="">Set status…</option>
+            {columns.map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}
+          </select>
+          <select
+            defaultValue=""
+            onChange={(e) => e.target.value && applyBulk({ priority: e.target.value })}
+            className={selectClass}
+          >
+            <option value="">Set priority…</option>
+            {["critical", "high", "medium", "low"].map((p) => (<option key={p} value={p}>{p}</option>))}
+          </select>
+          <select
+            defaultValue=""
+            onChange={(e) => applyBulk({ assignedTo: e.target.value === "__unassign" ? "" : e.target.value })}
+            className={selectClass}
+          >
+            <option value="">Assign to…</option>
+            <option value="__unassign">Unassigned</option>
+            {members.map((m) => (<option key={m._id} value={m._id}>{m.name}</option>))}
+          </select>
+          <button
+            onClick={() => applyBulk({ archived: true })}
+            className="text-xs text-ink-subtle hover:text-danger px-2 py-1.5"
+          >
+            Archive
+          </button>
+          <button onClick={clearSelection} className="text-xs text-ink-subtle hover:text-ink px-2 py-1.5 ml-auto">
+            Clear
+          </button>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -235,11 +400,54 @@ export const ListView = () => {
         </div>
       )}
 
+      {/* Archived issues bin */}
+      {showArchived && (
+        <div className="mb-3 bg-white border border-line rounded-lg p-4">
+          <h2 className="text-sm font-semibold text-ink mb-3 flex items-center gap-2">
+            <Archive size={15} className="text-ink-subtle" /> Archived issues ({archived.length})
+          </h2>
+          {archived.length === 0 ? (
+            <p className="text-xs text-ink-subtle italic">No archived issues.</p>
+          ) : (
+            <div className="divide-y divide-line">
+              {archived.map((t) => (
+                <div key={t._id} className="flex items-center gap-2 py-2">
+                  <TypeIcon type={t.type} />
+                  <span className="text-[11px] font-medium text-ink-subtle flex-shrink-0">{t.key}</span>
+                  <span className="text-sm text-ink flex-1 truncate">{t.title}</span>
+                  <button
+                    onClick={() => restoreTask(t)}
+                    className="flex items-center gap-1 text-xs text-brand font-medium hover:underline"
+                  >
+                    <RotateCcw size={13} /> Restore
+                  </button>
+                  <button
+                    onClick={() => purgeTask(t)}
+                    className="p-1.5 rounded text-ink-subtle hover:bg-danger-tint hover:text-danger transition-colors"
+                    title="Delete permanently"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Table */}
       <div className="bg-white border border-line rounded-lg overflow-x-auto">
         <table className="w-full text-sm min-w-[820px]">
           <thead>
             <tr className="text-left text-ink-subtle border-b border-line bg-canvas">
+              <th className="px-3 py-2 w-8">
+                <input
+                  type="checkbox"
+                  checked={sorted.length > 0 && sorted.every((t) => selected.has(t._id))}
+                  onChange={() => toggleAll(sorted.map((t) => t._id))}
+                  aria-label="Select all"
+                />
+              </th>
               <SortHead field="type" className="w-10">Type</SortHead>
               <SortHead field="key" className="w-24">Key</SortHead>
               <SortHead field="title">Summary</SortHead>
@@ -253,17 +461,27 @@ export const ListView = () => {
           </thead>
           <tbody>
             {loading && (
-              <tr><td colSpan={9} className="px-3 py-8 text-center text-ink-subtle">Loading…</td></tr>
+              <tr><td colSpan={10} className="px-3 py-8 text-center text-ink-subtle">Loading…</td></tr>
             )}
             {!loading && sorted.length === 0 && (
-              <tr><td colSpan={9} className="px-3 py-8 text-center text-ink-subtle">No issues match.</td></tr>
+              <tr><td colSpan={10} className="px-3 py-8 text-center text-ink-subtle">No issues match.</td></tr>
             )}
             {sorted.map((t) => (
               <tr
                 key={t._id}
                 onClick={() => navigate(`/browse/${t.key}`)}
-                className="border-b border-line last:border-0 hover:bg-canvas cursor-pointer"
+                className={`border-b border-line last:border-0 hover:bg-canvas cursor-pointer ${
+                  selected.has(t._id) ? "bg-brand-tint/40" : ""
+                }`}
               >
+                <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    checked={selected.has(t._id)}
+                    onChange={() => toggleSelect(t._id)}
+                    aria-label={`Select ${t.key}`}
+                  />
+                </td>
                 <td className="px-3 py-2"><TypeIcon type={t.type} /></td>
                 <td className="px-3 py-2 text-[11px] font-semibold text-ink-subtle">{t.key}</td>
                 <td className="px-3 py-2 text-ink">{t.title}</td>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { MemberCard } from "./MemberCard";
 import { InviteModal } from "./InviteModal";
+import { PendingInvites } from "./PendingInvites";
 import { useAuth } from "../../hooks/useAuth";
 import api from "../../services/api";
 import toast from "react-hot-toast";
@@ -8,13 +9,17 @@ import { Users, UserPlus } from "lucide-react";
 
 export const TeamOverview = () => {
   const [members, setMembers] = useState([]);
+  const [org, setOrg] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  
+
   const { userData } = useAuth();
+  const isAdmin = userData?.role === "ADMIN";
 
   useEffect(() => {
     fetchMembers();
+    // The org summary tells us who the owner is (can't be removed/demoted)
+    api.get("/api/org").then(({ data }) => setOrg(data)).catch(() => {});
   }, []);
 
   const fetchMembers = async () => {
@@ -25,6 +30,28 @@ export const TeamOverview = () => {
       toast.error(error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const changeRole = async (member, role) => {
+    if (role === member.role) return;
+    try {
+      await api.patch(`/api/org/members/${member._id}/role`, { role });
+      setMembers((prev) => prev.map((m) => (m._id === member._id ? { ...m, role } : m)));
+      toast.success(`${member.name} is now ${role}`);
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Could not change role");
+    }
+  };
+
+  const removeMember = async (member) => {
+    if (!window.confirm(`Remove ${member.name} from the organization?`)) return;
+    try {
+      await api.delete(`/api/org/members/${member._id}`);
+      setMembers((prev) => prev.filter((m) => m._id !== member._id));
+      toast.success(`${member.name} removed`);
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Could not remove member");
     }
   };
 
@@ -62,9 +89,19 @@ export const TeamOverview = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {members.map((member) => (
-          <MemberCard key={member._id} member={member} />
+          <MemberCard
+            key={member._id}
+            member={member}
+            canManage={isAdmin}
+            isSelf={member._id === userData?._id}
+            isOwner={org?.adminId === member._id}
+            onRoleChange={changeRole}
+            onRemove={removeMember}
+          />
         ))}
       </div>
+
+      {isAdmin && <PendingInvites />}
 
       {members.length === 0 && (
         <div className="text-center text-ink-subtle py-12 bg-white border border-line rounded-lg">

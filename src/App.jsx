@@ -15,6 +15,9 @@ import { Tasks } from "./pages/Tasks";
 import { Backlog } from "./pages/Backlog";
 import { ListView } from "./pages/ListView";
 import { CalendarView } from "./pages/CalendarView";
+import { TimelineView } from "./pages/TimelineView";
+import { Reports } from "./pages/Reports";
+import { OrgSettings } from "./pages/OrgSettings";
 import { Chat } from "./pages/Chat";
 import { Team } from "./pages/Team";
 import { TaskDetail } from "./pages/TaskDetail";
@@ -55,8 +58,11 @@ function App() {
               <Route path="tasks" element={<Tasks />} />
               <Route path="list" element={<ListView />} />
               <Route path="calendar" element={<CalendarView />} />
+              <Route path="timeline" element={<TimelineView />} />
+              <Route path="reports" element={<Reports />} />
               <Route path="chat" element={<Chat />} />
               <Route path="team" element={<Team />} />
+              <Route path="settings" element={<OrgSettings />} />
               <Route path="browse/:key" element={<TaskDetail />} />
             </Route>
 

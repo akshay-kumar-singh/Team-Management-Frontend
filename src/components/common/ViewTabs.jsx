@@ -1,11 +1,12 @@
 import { NavLink } from "react-router-dom";
-import { LayoutGrid, ListTodo, Table2, CalendarDays } from "lucide-react";
+import { LayoutGrid, ListTodo, Table2, CalendarDays, GanttChartSquare } from "lucide-react";
 
 const TABS = [
   { to: "tasks", label: "Board", icon: LayoutGrid },
   { to: "backlog", label: "Backlog", icon: ListTodo },
   { to: "list", label: "List", icon: Table2 },
   { to: "calendar", label: "Calendar", icon: CalendarDays },
+  { to: "timeline", label: "Timeline", icon: GanttChartSquare },
 ];
 
 /** Per-project view switcher (Board / Backlog / List / Calendar). */

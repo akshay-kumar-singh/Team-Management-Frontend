@@ -78,7 +78,7 @@ export const useTasks = (projectId) => {
     try {
       await api.delete(`/api/tasks/${id}`);
       setTasks((prev) => prev.filter((t) => t._id !== id));
-      toast.success("Task deleted successfully");
+      toast.success("Issue archived — restore it from List → Archived");
     } catch (error) {
       toast.error(error.message);
       throw error;

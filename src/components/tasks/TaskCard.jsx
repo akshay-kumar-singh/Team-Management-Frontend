@@ -30,10 +30,13 @@ export const TaskCard = ({ task, index, onEdit, onDelete, epicProgress, isDone }
           {...provided.draggableProps}
           {...provided.dragHandleProps}
           onClick={openDetail}
-          className={`group bg-white p-3 rounded border border-line mb-2 shadow-sm hover:bg-gray-50 transition-colors duration-150 cursor-pointer ${
+          className={`group bg-white p-3 rounded border border-line mb-2 shadow-sm hover:bg-gray-50 transition-colors duration-150 cursor-pointer flex flex-col h-[168px] ${
             snapshot.isDragging ? "shadow-lg ring-2 ring-brand/40 rotate-1" : ""
           }`}
         >
+          {/* Content area — clips overflow so every card is exactly the same
+              height; the footer below stays pinned and always visible. */}
+          <div className="flex-1 min-h-0 overflow-hidden">
           {/* Epic link chip (for issues that belong to an epic) */}
           {task.epicId?.key && !isEpic && (
             <div className="mb-1.5">
@@ -45,7 +48,7 @@ export const TaskCard = ({ task, index, onEdit, onDelete, epicProgress, isDone }
 
           {/* Title + hover actions */}
           <div className="flex items-start justify-between gap-2 mb-2">
-            <h4 className="text-sm text-ink leading-snug flex-1 group-hover:text-brand">
+            <h4 className="text-sm text-ink leading-snug flex-1 group-hover:text-brand line-clamp-2">
               {task.title}
             </h4>
             <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
@@ -84,12 +87,12 @@ export const TaskCard = ({ task, index, onEdit, onDelete, epicProgress, isDone }
           {/* Labels */}
           {labels.length > 0 && (
             <div className="flex flex-wrap items-center gap-1 mb-2">
-              {labels.slice(0, 3).map((label) => (
+              {labels.slice(0, 2).map((label) => (
                 <LabelChip key={label} label={label} />
               ))}
-              {labels.length > 3 && (
+              {labels.length > 2 && (
                 <span className="text-[10px] text-ink-subtle font-medium">
-                  +{labels.length - 3}
+                  +{labels.length - 2}
                 </span>
               )}
             </div>
@@ -124,8 +127,11 @@ export const TaskCard = ({ task, index, onEdit, onDelete, epicProgress, isDone }
             </div>
           )}
 
-          {/* Footer: type + key ... priority + avatar */}
-          <div className="flex items-center justify-between">
+          </div>
+
+          {/* Footer: type + key · priority + avatar — fixed at the bottom so
+              every card is exactly the same height regardless of content */}
+          <div className="flex items-center justify-between pt-2">
             <div className="flex items-center gap-1.5 min-w-0">
               <TypeIcon type={task.type} />
               {task.key && (

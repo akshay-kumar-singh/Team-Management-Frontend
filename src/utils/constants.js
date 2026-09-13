@@ -24,6 +24,9 @@ export const DEFAULT_BOARD_COLUMNS = [
   { id: "todo", name: "To Do", wipLimit: null },
   { id: "in-progress", name: "In Progress", wipLimit: null },
   { id: "in-review", name: "In Review", wipLimit: null },
+  { id: "dev-testing", name: "Dev Testing", wipLimit: null },
+  { id: "qa-testing", name: "QA Testing", wipLimit: null },
+  { id: "acceptance", name: "Acceptance", wipLimit: null },
   { id: "done", name: "Done", wipLimit: null },
 ];
 
